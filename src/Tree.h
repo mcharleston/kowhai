@@ -28,12 +28,17 @@ private:
 	int numVertices;
 	bool _showInfo;
 	char prefix;
+	double birthRate;
 	std::map<Node*, std::string>* info; // TODO this needs to be turned into a pointer, referring back to maybe an original in a cophymap or null.
 //	std::map<Node*, eventType> event;
 
 public:
-	Tree() : label("untitled"), root(nullptr), labelSpace(0), numVertices(-1), _showInfo(false), prefix('v'), info(nullptr) {}
-	Tree(Node* r) : label("untitled"), root(r), labelSpace(0), numVertices(-1), _showInfo(false), prefix('v'), info(nullptr) {}
+	Tree() : label("untitled"), root(nullptr), labelSpace(0), numVertices(-1), _showInfo(false), prefix('v'), info(nullptr) {
+		birthRate = 1.0;
+	}
+	Tree(Node* r) : label("untitled"), root(r), labelSpace(0), numVertices(-1), _showInfo(false), prefix('v'), info(nullptr) {
+		birthRate = 1.0;
+	}
 	Tree(char prefix, std::string);
 	Tree(std::string str);
 	~Tree() { delete root; }
@@ -61,6 +66,7 @@ public:
 	Node* getRoot() { return root; }
 	inline bool getShowInfo() const { return _showInfo; }
 	std::map<std::string, Node*>& getVertices() { if (V.size() == 0) { gatherVertices(); } return V; }
+	void growYule(int numLeaves);
 
 	bool isAncestralTo(Node* x, Node* y);
 

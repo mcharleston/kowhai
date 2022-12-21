@@ -5,12 +5,19 @@
  *      Author: mac
  */
 
+#include <string>
+
+#include "Tree.h"
+
 using namespace std;
 using namespace cospec;
 
-bool _silent;
+string cospecHelp("CoSpec Help");
 
 int main(int argn, char** argc) {
+	Tree T;
+	T.growYule(5);
+	cout << T;
 	return 0;
 }
 

@@ -6,6 +6,7 @@
  */
 
 #include <assert.h>
+#include <cmath>
 #include <cstring>
 #include <map>
 #include <set>
@@ -15,6 +16,7 @@
 
 #include "../utility/appexception.h"
 #include "../utility/debugging.h"
+#include "../utility/myrandom.h"
 #include "CoSpecParser.h"
 #include "Tree.h"
 
@@ -216,6 +218,52 @@ int Tree::getMaxLabelWidth(Node *v) {
 		child = child->getSibling();
 	}
 	return length;
+}
+
+void Tree::growYule(int targetNumLeaves) {
+	/*
+	 * Add maxLeaves leaves, via maxLeaves bifurcations. Grow according to a
+	 * Markov process, in which each tip is equally likely to split.
+	 */
+	std::vector<Node*> L;
+	L.clear();
+	root = new Node("root");
+	root->setTree(this);
+	L.push_back(root);
+	int numLeaves = L.size();
+	double divTime = 0;
+	double height = 0;
+	if (targetNumLeaves < 2) {
+		return;
+	}
+	int vertexNumber(1);
+	while (numLeaves < targetNumLeaves) {
+		// Choose a leaf at random:
+		int idx = iran(L.size());
+		Node* x = L[idx];
+		// Bifurcate it with no branch lengths assigned:
+		Node *y = new Node(), *z = new Node();
+		x->bifurcate(y, z);
+		++vertexNumber;
+		string label = prefix + to_string(vertexNumber);
+		y->setLabel(label);
+		++vertexNumber;
+		label = prefix + to_string(vertexNumber);
+		z->setLabel(label);
+		L[idx] = y; // replacing x in the array list
+		L.push_back(z);
+		numLeaves++;
+		// Add divergence time to all leaf branch lengths:
+		divTime = -log(fran() / (birthRate * (double) numLeaves));
+		height += divTime;
+	}
+	// get a new divergence time for the last period:
+	divTime = -log( fran() / (birthRate * (double) numLeaves));
+	// Now account for sampling: we assume we pick the tree any time during
+	// the period when there are this number of leaves:
+	double lastDivTime = divTime * fran();
+	height += lastDivTime;
+	gatherVertices();
 }
 
 bool Tree::isAncestralTo(Node* x, Node*y) {
