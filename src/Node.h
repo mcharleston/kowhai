@@ -100,6 +100,8 @@ public:
 	inline void setParent(Node* p) { parent = p; }
 	inline void setSibling(Node* sib) { sibling = sib; sib->parent = parent; }
 	inline void setTree(Tree *tr) { T = tr; }
+
+	void writeNewick(std::ostream& os);
 };
 
 

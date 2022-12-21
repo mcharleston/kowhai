@@ -151,6 +151,22 @@ void Node::setFirstChild(Node* c) {
 	c->parent = this;
 }
 
+void Node::writeNewick(ostream& os) {
+	if (isLeaf()) {
+		os << label;
+	} else {
+		os << '(';
+		Node* c = firstChild;
+		c->writeNewick(os);
+		c = c->sibling;
+		while (c != nullptr) {
+			os << ',';
+			c->writeNewick(os);
+			c = c->sibling;
+		}
+		os << ')';
+	}
+}
 
 std::ostream& operator<<(std::ostream& os, Node& n) {
 	if (n.isLeaf()) {

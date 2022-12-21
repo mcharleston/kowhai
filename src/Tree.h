@@ -18,6 +18,11 @@
 
 namespace kowhai {
 
+enum TreeDisplayFormat {
+	phylogram,
+	newick
+};
+
 class Tree {
 private:
 	std::string label;
@@ -29,15 +34,16 @@ private:
 	bool _showInfo;
 	char prefix;
 	double birthRate;
-	std::map<Node*, std::string>* info; // TODO this needs to be turned into a pointer, referring back to maybe an original in a cophymap or null.
-//	std::map<Node*, eventType> event;
-
+	std::map<Node*, std::string>* info;
+	TreeDisplayFormat displayFormat;
 public:
 	Tree() : label("untitled"), root(nullptr), labelSpace(0), numVertices(-1), _showInfo(false), prefix('v'), info(nullptr) {
 		birthRate = 1.0;
+		displayFormat = phylogram;
 	}
 	Tree(Node* r) : label("untitled"), root(r), labelSpace(0), numVertices(-1), _showInfo(false), prefix('v'), info(nullptr) {
 		birthRate = 1.0;
+		displayFormat = phylogram;
 	}
 	Tree(char prefix, std::string);
 	Tree(std::string str);
@@ -53,6 +59,7 @@ public:
 	void constructFromNewickString(std::string str);
 //	void compressTraverseWriteOld(std::ostream& os, Node* v, bool _showAssociations = false);
 
+	TreeDisplayFormat& displayAs() { return displayFormat; }
 	void gatherVertices();
 	int getDistUp(Node* lower, Node* upper);
 	inline unsigned int getHeight() { return root->getHeight(); }
@@ -85,6 +92,8 @@ public:
 	void setNodeLabel(Node* n, const std::string& newlabel);
 	void setRoot(Node* r) { root = r; }
 	void setShowInfo(bool b) { _showInfo = b; }
+
+	void writeNewick(std::ostream& os);
 
 };
 

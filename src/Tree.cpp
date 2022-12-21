@@ -363,7 +363,16 @@ ostream& operator<<(ostream& os, Tree& T) {
 		return os;
 	}
 //	os << T.getLabel() << " = " << *(T.getRoot()) << std::endl;
-	T.compressTraverseWrite(os);
+	switch (T.displayAs()) {
+	case newick:
+		T.writeNewick(os);
+		break;
+	case phylogram:
+		T.compressTraverseWrite(os);
+		break;
+	default:
+		break;
+	}
 	return os;
 }
 
@@ -387,6 +396,10 @@ void Tree::setNodeLabel(Node* n, const std::string& newlabel) {
 	V.erase(n->getLabel());
 	n->setLabel(newlabel);
 	V[newlabel] = n;
+}
+
+void Tree::writeNewick(ostream& os) {
+	root->writeNewick(os);
 }
 
 } /* namespace segdup */
