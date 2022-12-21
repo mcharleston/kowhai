@@ -14,7 +14,7 @@ namespace cospec {
 
 class GeneFamily {
 private:
-	Tree* H;
+	Tree* H;	// associated host tree
 public:
 	GeneFamily();
 	virtual ~GeneFamily();
