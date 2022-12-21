@@ -1,2 +1,3 @@
-# cospec
-C++ program to model coevolution at species level
+# Kowhai
+
+C++ program to both model coevolution at species level, and do cophylogenetic analysis.
