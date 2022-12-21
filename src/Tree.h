@@ -16,7 +16,7 @@
 
 #include "Node.h"
 
-namespace cospec {
+namespace kowhai {
 
 class Tree {
 private:

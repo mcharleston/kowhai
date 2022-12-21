@@ -14,7 +14,7 @@
 
 using namespace std;
 
-namespace cospec {
+namespace kowhai {
 
 Node::~Node() {
 	// Destroy the children first!

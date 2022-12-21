@@ -34,7 +34,7 @@ extern bool _debugging;
 extern bool _silent;
 extern bool _verbose;
 
-namespace cospec {
+namespace kowhai {
 
 bool matchesIgnoreCase(string str, const std::vector<std::string>& patterns) {
 	// Convert initializer_list to vector and call the (string, vector) overload.

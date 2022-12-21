@@ -22,7 +22,7 @@
 
 using namespace std;
 
-namespace cospec {
+namespace kowhai {
 
 Tree::Tree(char pre, std::string str) : root(nullptr), labelSpace(0), numVertices(-1), prefix(pre) {
 	if (str[0] == '(') {

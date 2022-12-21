@@ -13,23 +13,23 @@
 #include "../utility/debugging.h"
 #include "../utility/appexception.h"
 #include "../utility/parser.h"
-#include "CoSpecParser.h"
+#include "KowhaiParser.h"
 #include "Node.h"
 #include "Tree.h"
 #include "project.h"
 
 using namespace std;
-using namespace cospec;
+using namespace kowhai;
 
 extern bool _debugging;
 
 namespace parsing {
 
-CoSpecParser::CoSpecParser(const std::string& fileName, Project* pr)
+KowhaiParser::KowhaiParser(const std::string& fileName, Project* pr)
 		: Parser(fileName), proj(pr) {
 }
 
-void CoSpecParser::parse() {
+void KowhaiParser::parse() {
 	/*
 	 * Grammar of NEXUS file:
 	 * <nexus> ::= "#NEXUS" { <nexusblock> }
@@ -45,7 +45,7 @@ void CoSpecParser::parse() {
 	}
 }
 
-void CoSpecParser::parseBranchLength(Node* v) {
+void KowhaiParser::parseBranchLength(Node* v) {
 	if (matches(':')) {
 		advance();
 		double d = getDouble();
@@ -54,14 +54,14 @@ void CoSpecParser::parseBranchLength(Node* v) {
 	}
 }
 
-void CoSpecParser::parseCoSpecBlock() {
+void KowhaiParser::parseKowhaiBlock() {
 	/**
 	 * EBNF format (case insensitive throughout):
-	 * cospecBlock := "cospec" { <hosttree> | <associatetree> | <eventcosts> }
+	 * KowhaiBlock := "Kowhai" { <hosttree> | <associatetree> | <eventcosts> }
 	 * ..?
 	 */
 	bool _debugging = false;
-	eat("cospec");
+	eat("Kowhai");
 	ignore(';');
 	while (hasNext() && !matches({ "end", "endblock" })) {
 //		advance();
@@ -78,22 +78,22 @@ void CoSpecParser::parseCoSpecBlock() {
 			advance();
 		}
 	}
-	DEBUG(cout << "Completed CoSpec block" << endl);
+	DEBUG(cout << "Completed Kowhai block" << endl);
 	advance();
 	ignore(';');
 }
 
-void CoSpecParser::parseNEXUSBlock() {
+void KowhaiParser::parseNEXUSBlock() {
 	skipComments();
 	eat("begin");
-	if (matches("cospec")) {
-		parseCoSpecBlock();
+	if (matches("Kowhai")) {
+		parseKowhaiBlock();
 	} else {
 		skipBlock();
 	}
 }
 
-void CoSpecParser::parseNewickTree(Tree* T) {
+void KowhaiParser::parseNewickTree(Tree* T) {
 	/**
 	 * Newick format grammar, adapted from http://evolution.genetics.washington.edu/phylip/newick_doc.html
 	 *
@@ -126,7 +126,7 @@ void CoSpecParser::parseNewickTree(Tree* T) {
 	T->calculateHeights(root);
 }
 
-void CoSpecParser::parseNewickSubtree(Node* v, char prefix) {
+void KowhaiParser::parseNewickSubtree(Node* v, char prefix) {
 	/**
 	 * See NEXUSParser::parseNewickFormatTree for Newick format
 	 */
@@ -193,7 +193,7 @@ try {
 }
 }
 
-void CoSpecParser::skipBlock() {
+void KowhaiParser::skipBlock() {
 	while (!matches({"end", "endblock"})) {
 		advance();
 	}

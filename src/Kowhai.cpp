@@ -1,5 +1,5 @@
 /*
- * CoSpec.cpp
+ * Kowhai.cpp
  *
  *  Created on: 21 Dec 2022
  *      Author: mac
@@ -10,13 +10,13 @@
 #include "Tree.h"
 
 using namespace std;
-using namespace cospec;
+using namespace kowhai;
 
-string cospecHelp("CoSpec Help");
+string kowhaiHelp("Kowhai Help");
 
 int main(int argn, char** argc) {
 	Tree T;
-	T.growYule(5);
+	T.growYule(25);
 	cout << T;
 	return 0;
 }

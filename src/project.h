@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include "../utility/parser.h"
 
-namespace cospec {
+namespace kowhai {
 
 class Project {
 private:

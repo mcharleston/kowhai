@@ -14,7 +14,7 @@
 #include <string>
 
 
-namespace cospec {
+namespace kowhai {
 
 class Tree;
 

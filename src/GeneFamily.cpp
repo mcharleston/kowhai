@@ -7,7 +7,7 @@
 
 #include "GeneFamily.h"
 
-namespace cospec {
+namespace kowhai {
 
 GeneFamily::GeneFamily() {
 	// TODO Auto-generated constructor stub
