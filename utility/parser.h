@@ -19,7 +19,7 @@
 
 #include "tokenlist.h"
 
-namespace cospec {
+namespace kowhai {
 class Project;
 }
 
@@ -39,7 +39,7 @@ protected:
 	bool _verbose;
 	TokenList TL;
 	unsigned int tokNumCount;
-	cospec::Project* proj;
+	kowhai::Project* proj;
 public:
 	virtual ~Parser() {}
 	explicit Parser();
@@ -114,7 +114,7 @@ public:
 	inline Token& next() { return *(TL.current+1); }
 
 	virtual void parse() {};
-	void setProject(cospec::Project* p) { proj = p; }
+	void setProject(kowhai::Project* p) { proj = p; }
 
 	void setVerbose(bool b) { _verbose = b; }
 	void skipComments();

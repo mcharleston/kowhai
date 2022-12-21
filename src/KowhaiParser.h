@@ -18,19 +18,19 @@ const std::vector<std::string> NEXUSSuffixes = { ".nx", ".nxs", ".nex", ".nexus"
 
 class KowhaiParser : public Parser {
 private:
-	Kowhai::Project* proj;
+	kowhai::Project* proj;
 
 public:
 	virtual ~KowhaiParser() { }
-	KowhaiParser(const std::string& fileName, Kowhai::Project* pr);
+	KowhaiParser(const std::string& fileName, kowhai::Project* pr);
 	KowhaiParser(TokenList& tl) : Parser(tl), proj(nullptr) {}
 
 	void parse();
-	void parseBranchLength(Kowhai::Node* v);
+	void parseBranchLength(kowhai::Node* v);
 	void parseKowhaiBlock();
 	void parseNEXUSBlock();
-	void parseNewickTree(Kowhai::Tree* T);
-	void parseNewickSubtree(Kowhai::Node* v, char prefix);
+	void parseNewickTree(kowhai::Tree* T);
+	void parseNewickSubtree(kowhai::Node* v, char prefix);
 	void parseTaxaBlock();
 
 	void skipBlock();

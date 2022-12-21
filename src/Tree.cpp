@@ -17,7 +17,7 @@
 #include "../utility/appexception.h"
 #include "../utility/debugging.h"
 #include "../utility/myrandom.h"
-#include "CoSpecParser.h"
+#include "KowhaiParser.h"
 #include "Tree.h"
 
 using namespace std;
@@ -180,7 +180,7 @@ void Tree::constructFromNewickString(std::string str) {
 	parsing::TokenList TL;
 	istringstream instr(str);
 	TL.tokenize(instr);
-	parsing::CoSpecParser p(TL);
+	parsing::KowhaiParser p(TL);
 	root = new Node("*");
 	TL.reset();
 	numVertices = 1;
@@ -341,7 +341,7 @@ Tree& Tree::operator=(const string& str) {
 		parsing::TokenList TL;
 		istringstream instr(str);
 		TL.tokenize(instr);
-		parsing::CoSpecParser p(TL);
+		parsing::KowhaiParser p(TL);
 		root = new Node("root");
 		TL.reset();
 		numVertices = 1;

@@ -11,7 +11,7 @@
 #include "myrandom.h"
 
 using namespace std;
-//using namespace cospec;
+//using namespace kowhai;
 
 bool _silent(false);
 

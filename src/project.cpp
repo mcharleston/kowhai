@@ -26,7 +26,7 @@
 #include "../utility/debugging.h"
 #include "../utility/parser.h"
 #include "Tree.h"
-#include "CoSpecParser.h"
+#include "KowhaiParser.h"
 
 using namespace std;
 
@@ -97,7 +97,7 @@ void Project::read(const std::string& filename) {
 	if (matchesIgnoreCase(suffix, parsing::NEXUSSuffixes)) {
 		// parse as NEXUS
 		DEBUG(cout << "parsing " << filename << " as NEXUSformat file" << endl);
-		parser = new parsing::CoSpecParser(filename, this);
+		parser = new parsing::KowhaiParser(filename, this);
 	} else {
 		stringstream ss;
 		ss << "Cannot recognise the file name \'" << filename << "\': giving up.";
