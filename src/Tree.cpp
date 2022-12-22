@@ -181,7 +181,8 @@ void Tree::constructFromNewickString(std::string str) {
 	istringstream instr(str);
 	TL.tokenize(instr);
 	parsing::KowhaiParser p(TL);
-	root = new Node("*");
+	root = new Node();
+	root->setLabel("r" + root->getLabel().erase(0,1));
 	TL.reset();
 	numVertices = 1;
 	p.parseNewickSubtree(root, prefix);
@@ -227,7 +228,8 @@ void Tree::growYule(int targetNumLeaves) {
 	 */
 	std::vector<Node*> L;
 	L.clear();
-	root = new Node("root");
+	root = new Node();
+	root->setLabel("r" + root->getLabel().erase(0,1));
 	root->setTree(this);
 	L.push_back(root);
 	int numLeaves = L.size();
@@ -236,33 +238,42 @@ void Tree::growYule(int targetNumLeaves) {
 	if (targetNumLeaves < 2) {
 		return;
 	}
-	int vertexNumber(1);
+//	int vertexNumber(1);
 	while (numLeaves < targetNumLeaves) {
 		// Choose a leaf at random:
 		int idx = iran(L.size());
 		Node* x = L[idx];
 		// Bifurcate it with no branch lengths assigned:
-		Node *y = new Node(), *z = new Node();
-		x->bifurcate(y, z);
-		++vertexNumber;
-		string label = prefix + to_string(vertexNumber);
-		y->setLabel(label);
-		++vertexNumber;
-		label = prefix + to_string(vertexNumber);
-		z->setLabel(label);
+		x->bifurcate();
+//		Node *y = new Node(), *z = new Node();
+//		x->bifurcate(y, z);
+//		++vertexNumber;
+//		string label = prefix + to_string(vertexNumber);
+//		y->setLabel(label);
+//		++vertexNumber;
+//		label = prefix + to_string(vertexNumber);
+//		z->setLabel(label);
+		Node* y = x->getFirstChild();
+		Node *z = y->getSibling();
 		L[idx] = y; // replacing x in the array list
 		L.push_back(z);
 		numLeaves++;
 		// Add divergence time to all leaf branch lengths:
-		divTime = -log(fran() / (birthRate * (double) numLeaves));
+		divTime = -log(fran()) / (birthRate * (double) numLeaves);
 		height += divTime;
+		for (Node* l : L) {
+			l->addToBranchLength(divTime);
+		}
 	}
 	// get a new divergence time for the last period:
-	divTime = -log( fran() / (birthRate * (double) numLeaves));
+	divTime = -log( fran() ) / (birthRate * (double) numLeaves);
 	// Now account for sampling: we assume we pick the tree any time during
 	// the period when there are this number of leaves:
 	double lastDivTime = divTime * fran();
 	height += lastDivTime;
+	for (Node* l : L) {
+		l->addToBranchLength(divTime);
+	}
 	gatherVertices();
 }
 
@@ -342,7 +353,8 @@ Tree& Tree::operator=(const string& str) {
 		istringstream instr(str);
 		TL.tokenize(instr);
 		parsing::KowhaiParser p(TL);
-		root = new Node("root");
+		root = new Node();
+		root->setLabel("r" + root->getLabel().erase(0,1));
 		TL.reset();
 		numVertices = 1;
 		p.parseNewickSubtree(root, 'v');
@@ -402,4 +414,4 @@ void Tree::writeNewick(ostream& os) {
 	root->writeNewick(os);
 }
 
-} /* namespace segdup */
+} /* namespace kowhai */

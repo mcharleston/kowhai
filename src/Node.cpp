@@ -16,15 +16,21 @@ using namespace std;
 
 namespace kowhai {
 
+Node::Node() : parent(nullptr), firstChild(nullptr), sibling(nullptr), host(nullptr),
+		T(nullptr), CoP(nullptr), depth(-1), height(-1), timeIndex(-1), branchLength(0.0), _visited(false) {
+	static int nodeIndex(0);
+	++nodeIndex;
+	string str = "v" + to_string(nodeIndex);
+	setLabel(str);
+}
+
 Node::~Node() {
 	// Destroy the children first!
 	if (!isLeaf()) {
 		for (Node* c(firstChild); c != nullptr; c = c->sibling) {
-//			cout << "Deleting child node " << c->getLabel() << endl;
 			delete c;
 		}
 	}
-//	cout << "Deleting this node " << label << endl;
 }
 
 void Node::addChild(Node* c) {
@@ -52,6 +58,12 @@ void Node::addSubtreeVertices(map<string,Node*>& V) {
 	for (Node* c(firstChild); c != nullptr; c = c->sibling) {
 		c->addSubtreeVertices(V);
 	}
+}
+
+void Node::bifurcate() {
+	Node* u = new Node();
+	Node* v = new Node();
+	bifurcate(u, v);
 }
 
 void Node::bifurcate(string a, string b) {
@@ -91,6 +103,9 @@ void Node::calcDepth() {
 }
 
 void Node::calcHeight() {
+	/**
+	 * The height of a node is the maximum length of the unique path from the node to each of its descendant leaves.
+	 */
 	height = 0;
 	if (isLeaf()) {
 		height = 0;
@@ -100,6 +115,29 @@ void Node::calcHeight() {
 			h = std::max<int>(h, c->getHeight()+1);
 		}
 		height = h;
+	}
+}
+
+void Node::diverge() {
+	/**
+	 * As opposed to Node::bifurcate, which is simply a tree construction process, Node::diverge allows dependent
+	 * (parasite/gene) nodes to also bifurcate if they are extant at the same time.
+	 * Because it's a terrible idea to attempt to compare floats or doubles for equality in this context,"at the
+	 * same time" means "at the same integer index of all events in the whole cophylogeny thing".
+	 *
+	 * Procedure:
+	 * 		bifurcate
+	 * 		look at underlying Cophylogeny and find all other nodes at this time index
+	 * 		for all such nodes, codiverge or miss the boat.
+	 * 			(at this point there's no plan to include widespread parasites because I don't know how to model it)
+	 * 			These new nodes get the same time index as their parent; this will be updated when *they* get an event.
+	 */
+	bifurcate();
+	for (auto a : parasites) {
+		Node* p = a.second;
+		if (p->getTimeIndex() == timeIndex) {
+			p->bifurcate();
+		}
 	}
 }
 
@@ -154,6 +192,9 @@ void Node::setFirstChild(Node* c) {
 void Node::writeNewick(ostream& os) {
 	if (isLeaf()) {
 		os << label;
+		if (T->displayBranchLengths()) {
+			os << ':' << to_string(branchLength);
+		}
 	} else {
 		os << '(';
 		Node* c = firstChild;
@@ -165,6 +206,12 @@ void Node::writeNewick(ostream& os) {
 			c = c->sibling;
 		}
 		os << ')';
+		if (T->displayInternalLabels()) {
+			os << label;
+		}
+		if (T->displayBranchLengths()) {
+			os << ':' << to_string(branchLength);
+		}
 	}
 }
 
@@ -185,4 +232,4 @@ std::ostream& operator<<(std::ostream& os, Node& n) {
 	return os;
 }
 
-} /* namespace segdup */
+} /* namespace kowhai */

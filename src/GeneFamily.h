@@ -30,9 +30,11 @@ public:
 	GeneFamily();
 	virtual ~GeneFamily();
 
+	void addDependentTree(Tree* P, Node *h);
 
+	void coevolve();
 };
 
-} /* namespace segdup */
+} /* namespace kowhai */
 
 #endif /* GENEFAMILY_H_ */

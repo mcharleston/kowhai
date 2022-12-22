@@ -13,9 +13,9 @@
 #include <set>
 #include <string>
 
-
 namespace kowhai {
 
+class Cophylogeny;
 class Tree;
 
 const short duplicationEvent(0);
@@ -40,47 +40,57 @@ private:
 	Node* parent;
 	Node* firstChild;
 	Node* sibling;
-	Node* associate;
+	Node* host;	// e.g. if this is a parasite or gene, the host species;
+	std::map<std::string, Node*> parasites;	// e.g. if this is a host, the parasites or genes on it
 	Tree* T;
-//	eventType event;
+	Cophylogeny* CoP;
 	int depth;
 	int height;
+	int timeIndex;
 	double branchLength;
 	mutable bool _visited;
 public:
-	Node() : label("*"),
-				parent(nullptr), firstChild(nullptr), sibling(nullptr), associate(nullptr),
-				T(nullptr), depth(-1), height(-1), branchLength(0.0), _visited(false) {}
+	Node();
 	Node(std::string str) : label(str),
-				parent(nullptr), firstChild(nullptr), sibling(nullptr), associate(nullptr),
-				T(nullptr), depth(-1), height(-1), branchLength(0.0), _visited(false) {}
+				parent(nullptr), firstChild(nullptr), sibling(nullptr), host(nullptr),
+				T(nullptr), CoP(nullptr), depth(-1), height(-1), timeIndex(-1), branchLength(0.0), _visited(false) {}
 	virtual ~Node();
 
+	void addParasite(Node* p) { parasites[p->getLabel()] = p; }
 	void addChild(Node* c);
+	inline void addToBranchLength(double d) { branchLength += d; }
 	void addSibling(Node *s);
 	void addSubtreeVertices(std::map<std::string, Node*>& V);
 
+	void bifurcate();
 	void bifurcate(std::string a, std::string b);
 	void bifurcate(Node* u, Node* v);
 
 	void calcDepth();
 	void calcHeight();
+	inline void clearParasites() { parasites.clear(); }
 
-	std::string describeEvent();
+	void diverge();
 
 	inline double getBranchLength() const { return branchLength; }
 	int getDepth();
-//	inline eventType& getEvent() { return event; }
 	int getHeight();
 	inline const std::string& getLabel() const { return label; }
 	inline Node* getFirstChild() { return firstChild; }
+	inline Node* getHost() { return host; }
+	inline const Node* getHost() const { return host; }
 	inline std::string& getLabel() { return label; }
+	inline Node* getParasite(std::string str) { return parasites[str]; }
+	inline std::map<std::string, Node*>& getParasites() { return parasites; }
+	inline const std::map<std::string, Node*>& getParasites() const { return parasites; }
 	inline Node* getParent() const { return parent; }
 	inline Node* getSibling() { return sibling; }
+	inline int getTimeIndex() { return timeIndex; }
 	const Tree* getTree() const { return T; }
 	Tree* getTree() { return T; }
 
-	bool hasParent() const { return parent!=nullptr; }
+	inline bool hasHost() const { return host!=nullptr;}
+	inline bool hasParent() const { return parent!=nullptr; }
 
 	bool isAncestralTo(Node* other);
 	void inferEvents();
@@ -96,9 +106,11 @@ public:
 
 	inline void setBranchLength(double d) { branchLength = d; }
 	void setFirstChild(Node* c);
+	inline void setHost(Node* h) { host = h; }
 	inline void setLabel(std::string str) { label = str; }
 	inline void setParent(Node* p) { parent = p; }
 	inline void setSibling(Node* sib) { sibling = sib; sib->parent = parent; }
+	inline void setTimeIndex(int idx) { timeIndex = idx; }
 	inline void setTree(Tree *tr) { T = tr; }
 
 	void writeNewick(std::ostream& os);
@@ -107,6 +119,6 @@ public:
 
 std::ostream& operator<<(std::ostream& os, Node& n) ;
 
-} /* namespace segdup */
+} /* namespace kowhai */
 
 #endif /* NODE_H_ */

@@ -132,7 +132,7 @@ void KowhaiParser::parseNewickSubtree(Node* v, char prefix) {
 	 */
 try {
 	bool _debugging(false);
-	static int numInternals(0);
+//	static int numInternals(0);
 	char internalLabel[16];
 	DEBUG(cout << current() << endl);
 	DEBUG(cout << "parsing subtree" << endl);
@@ -149,11 +149,11 @@ try {
 		}
 		parseBranchLength(child);
 		v->setFirstChild(child);
-		if (v->getLabel() == "*") {
-			++numInternals;
-			sprintf(internalLabel, "%c%d", prefix, numInternals);
-			v->setLabel(internalLabel);
-		}
+//		if (v->getLabel() == "*") {
+//			++numInternals;
+//			sprintf(internalLabel, "%c%d", prefix, numInternals);
+//			v->setLabel(internalLabel);
+//		}
 		DEBUG(cout << " set " << v->getLabel() << " as parent of " << child->getLabel() << endl);
 		while (matches(',')) {
 			// siblings!
@@ -165,9 +165,9 @@ try {
 					child->setLabel(getString());
 					advance();
 				} else {
-					++numInternals;
-					sprintf(internalLabel, "%c%d", prefix, numInternals);
-					child->setLabel(internalLabel);
+//					++numInternals;
+//					sprintf(internalLabel, "%c%d", prefix, numInternals);
+//					child->setLabel(internalLabel);
 				}
 			}
 			parseBranchLength(sib);

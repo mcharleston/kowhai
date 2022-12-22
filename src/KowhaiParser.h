@@ -38,4 +38,4 @@ public:
 
 } /* namespace parsing */
 
-#endif /* SEGDUPPARSER_H_ */
+#endif /* KOWHAIPARSER_H_ */

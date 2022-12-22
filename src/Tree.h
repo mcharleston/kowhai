@@ -36,14 +36,20 @@ private:
 	double birthRate;
 	std::map<Node*, std::string>* info;
 	TreeDisplayFormat displayFormat;
+	bool _displayBranchLengths;
+	bool _displayInternalLabels;
 public:
 	Tree() : label("untitled"), root(nullptr), labelSpace(0), numVertices(-1), _showInfo(false), prefix('v'), info(nullptr) {
 		birthRate = 1.0;
 		displayFormat = phylogram;
+		_displayBranchLengths = false;
+		_displayInternalLabels = false;
 	}
 	Tree(Node* r) : label("untitled"), root(r), labelSpace(0), numVertices(-1), _showInfo(false), prefix('v'), info(nullptr) {
 		birthRate = 1.0;
 		displayFormat = phylogram;
+		_displayBranchLengths = false;
+		_displayInternalLabels = false;
 	}
 	Tree(char prefix, std::string);
 	Tree(std::string str);
@@ -60,6 +66,12 @@ public:
 //	void compressTraverseWriteOld(std::ostream& os, Node* v, bool _showAssociations = false);
 
 	TreeDisplayFormat& displayAs() { return displayFormat; }
+	const TreeDisplayFormat& displayAs() const { return displayFormat; }
+	inline bool& displayBranchLengths() { return _displayBranchLengths; }
+	inline const bool& displayBranchLengths() const { return _displayBranchLengths; }
+	inline bool& displayInternalLabels() { return _displayInternalLabels; }
+	const inline bool& displayInternalLabels() const { return _displayInternalLabels; }
+
 	void gatherVertices();
 	int getDistUp(Node* lower, Node* upper);
 	inline unsigned int getHeight() { return root->getHeight(); }
@@ -99,6 +111,6 @@ public:
 
 std::ostream& operator<<(std::ostream& os, Tree& T);
 
-} /* namespace segdup */
+} /* namespace kowhai */
 
 #endif /* TREE_H_ */
