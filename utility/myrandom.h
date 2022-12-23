@@ -2,5 +2,5 @@
 float fran();
 double dran(double mult = 1.0);
 int iran(int max);
-uint plran(float l, float u, float r);
+unsigned int plran(float l, float u, float r);
 

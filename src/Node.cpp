@@ -11,13 +11,14 @@
 #include "Node.h"
 #include "Tree.h"
 #include "../utility/appexception.h"
+#include "../utility/myrandom.h"
 
 using namespace std;
 
 namespace kowhai {
 
-Node::Node() : parent(nullptr), firstChild(nullptr), sibling(nullptr), host(nullptr),
-		T(nullptr), CoP(nullptr), depth(-1), height(-1), timeIndex(-1), branchLength(0.0), _visited(false) {
+Node::Node() : parent(nullptr), firstChild(nullptr), sibling(nullptr), host(nullptr), _onHostVertex(false),
+		T(nullptr), CoP(nullptr), depth(-1), height(-1), timeIndex(-1), time(0.0), branchLength(0.0), _visited(false) {
 	static int nodeIndex(0);
 	++nodeIndex;
 	string str = "v" + to_string(nodeIndex);
@@ -118,6 +119,26 @@ void Node::calcHeight() {
 	}
 }
 
+void Node::codivergeWith(Node* h) {
+	if (h->isLeaf()) {
+		throw new app_exception("Node::codivergeWith(h): host node h=" + h->getLabel() + " is a leaf" );
+	}
+	bifurcate();
+	Node* x = h->firstChild;
+	for (Node *c = firstChild; c != nullptr; c= c->sibling) {
+		c->setHost(x);
+		c->onHostVertex() = true;// XXX This will have to change -- dev hack
+		x->addParasite(c);
+		c = c->sibling;
+		x = x->sibling;
+	}
+}
+
+bool Node::doesCodiverge() {
+	double prob = T->getCodivergenceProbability();
+	return (fran() < prob);
+}
+
 void Node::diverge() {
 	/**
 	 * As opposed to Node::bifurcate, which is simply a tree construction process, Node::diverge allows dependent
@@ -136,9 +157,21 @@ void Node::diverge() {
 	for (auto a : parasites) {
 		Node* p = a.second;
 		if (p->getTimeIndex() == timeIndex) {
-			p->bifurcate();
+			if (p->doesCodiverge()) {
+				p->bifurcate();
+			} else {
+
+			}
 		}
 	}
+}
+
+double Node::getBirthRate() const {
+	return T->getBirthRate();
+}
+
+double Node::getDeathRate() const {
+	return T->getDeathRate();
 }
 
 int Node::getDepth() {

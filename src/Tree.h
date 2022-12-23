@@ -12,6 +12,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <vector>
 #include <utility>
 
 #include "Node.h"
@@ -34,23 +35,18 @@ private:
 	bool _showInfo;
 	char prefix;
 	double birthRate;
+	double deathRate;
+	double hostSwitchRate;
+	double codivergenceProbability;
+	double treeAge;
 	std::map<Node*, std::string>* info;
+	std::vector<Node*> orderedNodes;
 	TreeDisplayFormat displayFormat;
 	bool _displayBranchLengths;
 	bool _displayInternalLabels;
 public:
-	Tree() : label("untitled"), root(nullptr), labelSpace(0), numVertices(-1), _showInfo(false), prefix('v'), info(nullptr) {
-		birthRate = 1.0;
-		displayFormat = phylogram;
-		_displayBranchLengths = false;
-		_displayInternalLabels = false;
-	}
-	Tree(Node* r) : label("untitled"), root(r), labelSpace(0), numVertices(-1), _showInfo(false), prefix('v'), info(nullptr) {
-		birthRate = 1.0;
-		displayFormat = phylogram;
-		_displayBranchLengths = false;
-		_displayInternalLabels = false;
-	}
+	Tree();
+	Tree(Node* r);
 	Tree(char prefix, std::string);
 	Tree(std::string str);
 	~Tree() { delete root; }
@@ -73,14 +69,21 @@ public:
 	const inline bool& displayInternalLabels() const { return _displayInternalLabels; }
 
 	void gatherVertices();
+
+	inline double getAge() const { return treeAge; }
+	double getBirthRate() const { return birthRate; }
+	double getCodivergenceProbability() const { return codivergenceProbability; }
+	double getDeathRate() const { return deathRate; }
 	int getDistUp(Node* lower, Node* upper);
 	inline unsigned int getHeight() { return root->getHeight(); }
+	double getHostSwitchRate() const { return hostSwitchRate; }
 	std::map<Node*, std::string>* getInfo() { return info; }
 	std::string getLabel() { return label; }
 	Node* getLCAofChildren(Node *p);
 	int getMaxLabelWidth(Node* v);
 	inline int getNumEdges() const { return V.size() - 1; }
 	inline int getNumVertices() const { return V.size(); }
+	std::vector<Node*> getOrderedNodes() { return orderedNodes; }
 	char getPrefixChar() const { return prefix; }
 	Node* getRoot() { return root; }
 	inline bool getShowInfo() const { return _showInfo; }
@@ -98,8 +101,12 @@ public:
 
 	void putInternalVertices(std::set<Node*>& IV);
 
+	void setBirthRate(double d) { birthRate = d; }
+	void setCodivergenceProbability(double d) { codivergenceProbability = d; }
+	void setDeathRate(double d) { deathRate = d; }
 	void setInfo(std::map<Node*, std::string>* inf) { info = inf; }
 	void setLabel(const std::string& str) { label = str; }
+	void setHostSwitchRate(double d) { hostSwitchRate = d; }
 	void setNodeLabel(const std::string& str, const std::string& newlabel);
 	void setNodeLabel(Node* n, const std::string& newlabel);
 	void setRoot(Node* r) { root = r; }

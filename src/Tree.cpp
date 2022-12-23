@@ -24,6 +24,29 @@ using namespace std;
 
 namespace kowhai {
 
+Tree::Tree() : label("untitled"), root(nullptr), labelSpace(0), numVertices(-1), _showInfo(false), prefix('v'), info(nullptr) {
+	birthRate = 1.0;
+	deathRate = 0.0;
+	hostSwitchRate = 0.0;
+	codivergenceProbability = 1.0;
+	treeAge = 0.0;
+	displayFormat = phylogram;
+	_displayBranchLengths = false;
+	_displayInternalLabels = false;
+}
+
+Tree::Tree(Node* r) : label("untitled"), root(r), labelSpace(0), numVertices(-1), _showInfo(false), prefix('v'), info(nullptr) {
+	birthRate = 1.0;
+	deathRate = 0.0;
+	hostSwitchRate = 0.0;
+	codivergenceProbability = 1.0;
+	treeAge = 0.0;
+	displayFormat = phylogram;
+	_displayBranchLengths = false;
+	_displayInternalLabels = false;
+	r->setTree(this);
+}
+
 Tree::Tree(char pre, std::string str) : root(nullptr), labelSpace(0), numVertices(-1), prefix(pre) {
 	if (str[0] == '(') {
 		constructFromNewickString(str);
@@ -89,6 +112,10 @@ void Tree::compressTraverseWrite(ostream& os) {
 	}
 	labelSpace = getMaxLabelWidth(root);
 	compressTraverseWrite(os, root);
+	for (Node* v : orderedNodes) {
+		cout << v->getLabel() << ':' << v->getTime() << " ";
+	}
+	cout << endl;
 	_showInfo = _oldShowInfo;
 }
 void Tree::compressTraverseWrite(ostream & os, Node* p) {
@@ -234,15 +261,16 @@ void Tree::growYule(int targetNumLeaves) {
 	L.push_back(root);
 	int numLeaves = L.size();
 	double divTime = 0;
-	double height = 0;
-	if (targetNumLeaves < 2) {
-		return;
-	}
+	treeAge = 0;
 //	int vertexNumber(1);
 	while (numLeaves < targetNumLeaves) {
 		// Choose a leaf at random:
 		int idx = iran(L.size());
 		Node* x = L[idx];
+		orderedNodes.push_back(x);
+		divTime = -log(fran()) / (birthRate * (double) numLeaves);
+		treeAge += divTime;
+		x->setTime(treeAge);
 		// Bifurcate it with no branch lengths assigned:
 		x->bifurcate();
 //		Node *y = new Node(), *z = new Node();
@@ -259,20 +287,20 @@ void Tree::growYule(int targetNumLeaves) {
 		L.push_back(z);
 		numLeaves++;
 		// Add divergence time to all leaf branch lengths:
-		divTime = -log(fran()) / (birthRate * (double) numLeaves);
-		height += divTime;
 		for (Node* l : L) {
 			l->addToBranchLength(divTime);
 		}
 	}
 	// get a new divergence time for the last period:
-	divTime = -log( fran() ) / (birthRate * (double) numLeaves);
+	divTime = -log(fran()) / (birthRate * (double) numLeaves);
 	// Now account for sampling: we assume we pick the tree any time during
 	// the period when there are this number of leaves:
 	double lastDivTime = divTime * fran();
-	height += lastDivTime;
+	treeAge += lastDivTime;
 	for (Node* l : L) {
 		l->addToBranchLength(divTime);
+		orderedNodes.push_back(l);
+		l->setTime(treeAge);
 	}
 	gatherVertices();
 }

@@ -13,6 +13,8 @@
 using namespace std;
 using namespace kowhai;
 
+bool _debugging(false);
+
 string kowhaiHelp("Kowhai Help");
 
 void testTreeConstructionAndOutput() {
@@ -34,8 +36,15 @@ void testTreeConstructionAndOutput() {
 }
 
 int main(int argn, char** argc) {
+	Node* p = new Node();
+	Tree T(p);
+	T.growYule(10);
+
+	cout << T << endl;
 	Cophylogeny C;
-	C.setHostTree(new Tree("(A,(B,C))"));
+	C.setHostTree(&T);
+	C.createParasiteRoot(T.getRoot(), true);
+	C.coevolve();
 	return 0;
 }
 

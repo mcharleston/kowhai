@@ -41,19 +41,21 @@ private:
 	Node* firstChild;
 	Node* sibling;
 	Node* host;	// e.g. if this is a parasite or gene, the host species;
+	bool _onHostVertex;
 	std::map<std::string, Node*> parasites;	// e.g. if this is a host, the parasites or genes on it
 	Tree* T;
 	Cophylogeny* CoP;
 	int depth;
 	int height;
 	int timeIndex;
+	double time;	// beginning at time t=0 at the root
 	double branchLength;
 	mutable bool _visited;
 public:
 	Node();
 	Node(std::string str) : label(str),
-				parent(nullptr), firstChild(nullptr), sibling(nullptr), host(nullptr),
-				T(nullptr), CoP(nullptr), depth(-1), height(-1), timeIndex(-1), branchLength(0.0), _visited(false) {}
+				parent(nullptr), firstChild(nullptr), sibling(nullptr), host(nullptr), _onHostVertex(false),
+				T(nullptr), CoP(nullptr), depth(-1), height(-1), timeIndex(-1), time(0.0), branchLength(0.0), _visited(false) {}
 	virtual ~Node();
 
 	void addParasite(Node* p) { parasites[p->getLabel()] = p; }
@@ -69,10 +71,14 @@ public:
 	void calcDepth();
 	void calcHeight();
 	inline void clearParasites() { parasites.clear(); }
+	void codivergeWith(Node* h);
 
 	void diverge();
+	bool doesCodiverge();
 
-	inline double getBranchLength() const { return branchLength; }
+	double getBirthRate() const;
+	double getBranchLength() const { return branchLength; }
+	double getDeathRate() const;
 	int getDepth();
 	int getHeight();
 	inline const std::string& getLabel() const { return label; }
@@ -85,6 +91,7 @@ public:
 	inline const std::map<std::string, Node*>& getParasites() const { return parasites; }
 	inline Node* getParent() const { return parent; }
 	inline Node* getSibling() { return sibling; }
+	inline double getTime() const { return time; }
 	inline int getTimeIndex() { return timeIndex; }
 	const Tree* getTree() const { return T; }
 	Tree* getTree() { return T; }
@@ -100,6 +107,8 @@ public:
 
 	Node* next();
 
+	inline bool& onHostVertex() { return _onHostVertex; }
+	inline const bool& onHostVertex() const { return _onHostVertex; }
 	bool operator<=(Node& o) { return this->isAncestralTo(&o); }
 
 	void putChildren(std::set<Node*>& children);
@@ -110,6 +119,7 @@ public:
 	inline void setLabel(std::string str) { label = str; }
 	inline void setParent(Node* p) { parent = p; }
 	inline void setSibling(Node* sib) { sibling = sib; sib->parent = parent; }
+	inline void setTime(double d) { time = d; }
 	inline void setTimeIndex(int idx) { timeIndex = idx; }
 	inline void setTree(Tree *tr) { T = tr; }
 

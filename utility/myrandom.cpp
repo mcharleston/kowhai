@@ -35,6 +35,6 @@ int iran(int max) {
 uint plran(float l, float u, float r) {
 	float y(fran());
 	float ex(r+1.0);
-	return static_cast<uint>( std::pow( std::pow(u,ex) - std::pow(l, ex)*y + std::pow(l, ex), 1.0/ex ) );
+	return static_cast<unsigned int>( std::pow( std::pow(u,ex) - std::pow(l, ex)*y + std::pow(l, ex), 1.0/ex ) );
 }
 
