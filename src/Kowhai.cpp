@@ -36,15 +36,18 @@ void testTreeConstructionAndOutput() {
 }
 
 int main(int argn, char** argc) {
-	Node* p = new Node();
-	Tree T(p);
+	Node* h = new Node();
+	Tree T(h);
 	T.growYule(10);
-
 	cout << T << endl;
 	Cophylogeny C;
 	C.setHostTree(&T);
-	C.createParasiteRoot(T.getRoot(), true);
+	Node *p = C.createParasiteRoot(T.getRoot(), true);
+	p->getTree()->setCodivergenceProbability(0.5);
+	Node *q = C.createParasiteRoot(T.getRoot(), true);
+	q->getTree()->setCodivergenceProbability(0.8);
 	C.coevolve();
+	cout << C;
 	return 0;
 }
 

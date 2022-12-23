@@ -11,9 +11,12 @@
 #include "Node.h"
 #include "Tree.h"
 #include "../utility/appexception.h"
+#include "../utility/debugging.h"
 #include "../utility/myrandom.h"
 
 using namespace std;
+
+extern bool _debugging;
 
 namespace kowhai {
 
@@ -73,12 +76,7 @@ void Node::bifurcate(string a, string b) {
 	}
 	Node* u = new Node(a);
 	Node* v = new Node(b);
-	firstChild = u;
-	u->sibling = v;
-	u->parent = this;
-	u->T = T;
-	v->parent = this;
-	v->T = T;
+	bifurcate(u, v);
 }
 
 void Node::bifurcate(Node* u, Node* v) {
@@ -120,23 +118,28 @@ void Node::calcHeight() {
 }
 
 void Node::codivergeWith(Node* h) {
+	bool _debugging(false);
 	if (h->isLeaf()) {
 		throw new app_exception("Node::codivergeWith(h): host node h=" + h->getLabel() + " is a leaf" );
 	}
 	bifurcate();
+	DEBUG(cout << "codivergeWith: new children are " << firstChild->getLabel() << " and " << firstChild->getSibling()->getLabel() << endl);
 	Node* x = h->firstChild;
 	for (Node *c = firstChild; c != nullptr; c= c->sibling) {
 		c->setHost(x);
-		c->onHostVertex() = true;// XXX This will have to change -- dev hack
 		x->addParasite(c);
-		c = c->sibling;
+		DEBUG(cout << "Adding parasite " << c->getLabel() << " to host " << x->getLabel() << endl);
+		DEBUG(cout << c->getLabel() << ":" << x->getLabel() << endl);
 		x = x->sibling;
 	}
 }
 
 bool Node::doesCodiverge() {
+	bool _debugging(false);
 	double prob = T->getCodivergenceProbability();
-	return (fran() < prob);
+	double r(fran());
+	DEBUG(cout << "Codivergence probability: " << prob << "; r = " << r << endl);
+	return (r < prob);
 }
 
 void Node::diverge() {

@@ -5,6 +5,7 @@
  *      Author: mac
  */
 
+#include <map>
 #include <stdio.h>
 #include <vector>
 
@@ -27,7 +28,7 @@ void Cophylogeny::coevolve() {
 	 * 			another bifurcation on that host edge
 	 */
 
-	bool _debugging(true);
+	bool _debugging(false);
 	double currentTime(0.0);
 
 	// Host tree nodes are sorted in time order from t=0 to t=t_max (the leaves)
@@ -39,18 +40,21 @@ void Cophylogeny::coevolve() {
 	while (currentTime < H->getAge()) {
 		// collect all parasites on the host nodes extant at this time point
 		h = orderedHostNodes[i];
-		DEBUG(cout << "Processing host node " + h->getLabel() << endl);
+		DEBUG(cout << "Processing host node " + h->getLabel() << " at time " << h->getTime() << endl);
 		remove.clear();
 		if (h->isLeaf()) {
 			DEBUG(cout << "Reached the leaves: time to stop." << endl);
 			break;
 		}
+		DEBUG(cout << "This host node has " << h->getParasites().size() << " parasites." << endl);
 		for (auto a : h->getParasites()) {
 			Node* p = a.second;
 			if (p->onHostVertex()) {
 				if (p->doesCodiverge()) {
-					DEBUG(cout << p->getLabel() << " is codiverging on this host" << endl);
+					DEBUG(cout << p->getLabel() << " codiverges with this host" << endl);
 					p->codivergeWith(h);
+					p->getFirstChild()->onHostVertex() = true;
+					p->getFirstChild()->getSibling()->onHostVertex() = true;
 				} else {
 					// select one nascent host lineage at uniform random:
 					Node* nuHost = h->getFirstChild();
@@ -71,51 +75,11 @@ void Cophylogeny::coevolve() {
 		}
 		++i;
 	}
-//	std::vector<Node*> L;
-//	L.clear();
-//	Node *root = new Node();
-//	root->setLabel("r" + root->getLabel().erase(0,1));
-//	root->setTree(H);
-//	H->setRoot(root);
-//	L.push_back(root);
-//	int numLeaves = L.size();
-//	double divTime = 0;
-//	double height = 0;
-//	if (targetNumLeaves < 2) {
-//		return;
-//	}
-////	int vertexNumber(1);
-//	while (numLeaves < targetNumLeaves) {
-//		// Choose a leaf at random:
-//		int idx = iran(L.size());
-//		Node* x = L[idx];
-//		// Bifurcate it with no branch lengths assigned:
-//		x->bifurcate();
-//		Node* y = x->getFirstChild();
-//		Node *z = y->getSibling();
-//		L[idx] = y; // replacing x in the array list
-//		L.push_back(z);
-//		numLeaves++;
-//		// Add divergence time to all leaf branch lengths:
-//		divTime = -log(fran()) / (birthRate * (double) numLeaves);
-//		height += divTime;
-//		for (Node* l : L) {
-//			l->addToBranchLength(divTime);
-//		}
-//	}
-//	// get a new divergence time for the last period:
-//	divTime = -log(fran()) / (birthRate * (double) numLeaves);
-//	// Now account for sampling: we assume we pick the tree any time during
-//	// the period when there are this number of leaves:
-//	double lastDivTime = divTime * fran();
-//	height += lastDivTime;
-//	for (Node* l : L) {
-//		l->addToBranchLength(divTime);
-//	}
-//	gatherVertices();
+	// Store the association information in the parasite tree(s):
+	storeAssociationInfo();
 }
 
-void Cophylogeny::createParasiteRoot(Node* h, bool _onVertex) {
+Node* Cophylogeny::createParasiteRoot(Node* h, bool _onVertex) {
 	/**
 	 * Not sure now how to associate parasites with edges or vertices.
 	 *
@@ -139,6 +103,49 @@ void Cophylogeny::createParasiteRoot(Node* h, bool _onVertex) {
 	p->setHost(h);
 	h->addParasite(p);
 	p->onHostVertex() = _onVertex;
+	PTrees.insert(P);
+	cout << "Tree P with address " << P << " has been added to the cophylogeny" << endl;
+	return p;
+}
+
+ostream& operator<<(ostream& os, Cophylogeny& C) {
+	os << *(C.getHostTree());
+	for (Tree* P : C.getParasiteTrees()) {
+		P->setShowInfo(true);
+		os << *P;
+	}
+	return os;
+}
+
+void Cophylogeny::storeAssociationInfo() {
+	bool _debugging(false);
+	for (Tree* P : PTrees) {
+		P->gatherVertices();
+		DEBUG(cout << "|V(P)| = " << P->getVertices().size() << endl);
+		map<Node*, string>* info = P->getInfo();
+		if (info == nullptr) {
+			info = new map<Node*, string>();
+		}
+		for (auto as : P->getVertices()) {
+			Node* p = as.second;
+			DEBUG(cout << "parasite node " << p->getLabel() << endl);
+			string str;
+			if (p->isLeaf()) {
+				str = as.first + ":" + p->getHost()->getLabel();
+			} else {
+				str = as.first + ":[";
+				if (p->onHostVertex()) {
+					str += eventSymbol[codivergence];
+				} else {
+					str += eventSymbol[duplication];
+				}
+				str += "]" + p->getHost()->getLabel();
+			}
+			DEBUG(cout << "info on " << p->getLabel() << ": " << str << endl);
+			(*info)[p] = str;
+		}
+		P->setInfo(info);
+	}
 }
 
 } /* namespace kowhai */

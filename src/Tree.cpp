@@ -105,17 +105,17 @@ void Tree::compressTraverseWrite(ostream& os) {
 		DEBUG(cout << "root->getHeight() negative so calculating heights" << endl);
 		calculateHeights(root);
 	}
-	DEBUG(cout << "Address of info map = " << &info << endl);
+	DEBUG(cout << "Address of info map = " << info << endl);
 	bool _oldShowInfo(_showInfo);
 	if (info == nullptr) {
 		_showInfo = false;
 	}
 	labelSpace = getMaxLabelWidth(root);
 	compressTraverseWrite(os, root);
-	for (Node* v : orderedNodes) {
-		cout << v->getLabel() << ':' << v->getTime() << " ";
-	}
-	cout << endl;
+//	for (Node* v : orderedNodes) {
+//		cout << v->getLabel() << ':' << v->getTime() << " ";
+//	}
+//	cout << endl;
 	_showInfo = _oldShowInfo;
 }
 void Tree::compressTraverseWrite(ostream & os, Node* p) {
@@ -398,6 +398,7 @@ Tree& Tree::operator=(const string& str) {
 		throw new app_exception("Tree constructor with a single string argument is expecting Newick format tree description.");
 	}
 }
+
 ostream& operator<<(ostream& os, Tree& T) {
 	if (T.getRoot() == nullptr) {
 		return os;

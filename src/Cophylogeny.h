@@ -18,6 +18,7 @@ namespace kowhai {
 class Cophylogeny {
 private:
 	Tree* H;	// the underlying host tree
+	std::set<Tree*> PTrees;
 	std::map<int, std::set<Node*> > NodeByIndex;	// I need to come up with a better name for this
 		// NodeByIndex is the map of eventIndex -> <all Nodes at that timepoint>
 	int currentTimeIndex;
@@ -27,12 +28,16 @@ public:
 
 	void coevolve();
 
-	void createParasiteRoot(Node *h, bool _onVertex);
+	Node* createParasiteRoot(Node *h, bool _onVertex);
 
 	inline Tree* getHostTree() { return H; }
+	inline std::set<Tree*>& getParasiteTrees() { return PTrees; }
 
 	inline void setHostTree(Tree *T) { H = T; }
+	void storeAssociationInfo();
 };
+
+std::ostream& operator<<(std::ostream& os, Cophylogeny &C);
 
 } /* namespace kowhai */
 
