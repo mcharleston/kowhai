@@ -115,9 +115,14 @@ int main(int argn, char** argc) {
 				for (auto P : C.getParasiteTrees()) {
 					fseg << " -G \"";
 					P->writeNewick(fseg);
-					for (auto pr : P->getLeaves()) {
-						Node* p = pr.second;
-						fseg << pr.first << ':' << p->getHost()->getLabel() << " ";
+					fseg << "\" \"";
+					for (map<string, Node*>::iterator iter = P->getLeaves().begin(); iter != P->getLeaves().end(); ) {
+						Node* p = iter->second;
+						fseg << p->getLabel() << ':' << p->getHost()->getLabel();
+						++iter;
+						if (iter != P->getLeaves().end()) {
+							fseg << " ";
+						}
 					}
 					fseg << "\"";
 				}
