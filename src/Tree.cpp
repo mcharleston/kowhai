@@ -235,6 +235,18 @@ void Tree::gatherVertices() {
 	root->addSubtreeVertices(V);
 }
 
+map<string, Node*>& Tree::getLeaves() {
+	if (L.size() == 0) {
+		for (auto pr : getVertices()) {
+			Node* l = pr.second;
+			if (l->isLeaf()) {
+				L[l->getLabel()] = l;
+			}
+		}
+	}
+	return L;
+}
+
 int Tree::getMaxLabelWidth(Node *v) {
 	int length = v->getLabel().length();
 	if (_showInfo && (info->count(v) > 0)) {

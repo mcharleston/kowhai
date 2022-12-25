@@ -90,7 +90,7 @@ Node* Cophylogeny::createParasiteRoot(Node* h, bool _onVertex) {
 	 * 		create a base "Location" class from which both Edge (which doesnt' currently exist as a class) and
 	 * 		Node derive.  I think not, baby puppy.
 	 */
-	bool _debugging(true);
+	bool _debugging(false);
 	DEBUG(cout << "Creating Parasite Root node on host ";
 		if (_onVertex) {
 			cout << "vertex ";
@@ -104,7 +104,7 @@ Node* Cophylogeny::createParasiteRoot(Node* h, bool _onVertex) {
 	h->addParasite(p);
 	p->onHostVertex() = _onVertex;
 	PTrees.insert(P);
-	cout << "Tree P with address " << P << " has been added to the cophylogeny" << endl;
+	DEBUG(cout << "Tree P with address " << P << " has been added to the cophylogeny" << endl);
 	return p;
 }
 

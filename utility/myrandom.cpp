@@ -17,7 +17,9 @@ bool _silent(false);
 
 unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 
-std::default_random_engine generator(seed);
+std::random_device rd;
+std::mt19937 generator{rd()}; // or std::default_random_engine e{rd()};
+//std::default_random_engine generator(seed);
 std::uniform_real_distribution<float> runif(0.0, 1.0);
 std::uniform_real_distribution<double> dunif(0.0, 1.0);
 

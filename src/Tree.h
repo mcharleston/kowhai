@@ -30,6 +30,7 @@ private:
 	Node* root;
 	std::map<std::pair<Node*, Node*>, short> distUp;
 	std::map<std::string, Node*> V;	// vertices by name
+	std::map<std::string, Node*> L;	// leaf vertices by name
 	int labelSpace;	// how much does each vertex label need?
 	int numVertices;
 	bool _showInfo;
@@ -80,6 +81,7 @@ public:
 	std::map<Node*, std::string>* getInfo() { return info; }
 	std::string getLabel() { return label; }
 	Node* getLCAofChildren(Node *p);
+	std::map<std::string, Node*>& getLeaves();
 	int getMaxLabelWidth(Node* v);
 	inline int getNumEdges() const { return V.size() - 1; }
 	inline int getNumVertices() const { return V.size(); }
