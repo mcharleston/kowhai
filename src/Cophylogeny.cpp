@@ -47,6 +47,9 @@ void Cophylogeny::coevolve() {
 			break;
 		}
 		DEBUG(cout << "This host node has " << h->getParasites().size() << " parasites." << endl);
+		// DUPLICATION, HOST SWITCHING and EXTINCTION:
+
+		// CODIVERGENCE and MISSING THE BOAT:
 		for (auto a : h->getParasites()) {
 			Node* p = a.second;
 			if (p->onHostVertex()) {
@@ -108,6 +111,26 @@ Node* Cophylogeny::createParasiteRoot(Node* h, bool _onVertex) {
 	return p;
 }
 
+void Cophylogeny::outputForSegdup(ostream& os) {
+	os << "-S \"";
+	H->writeNewick(os);
+	os << "\"";
+	for (auto P : PTrees) {
+		os << " -G \"";
+		P->writeNewick(os);
+		os << "\" \"";
+		for (map<string, Node*>::iterator iter = P->getLeaves().begin(); iter != P->getLeaves().end(); ) {
+			Node* p = iter->second;
+			os << p->getLabel() << ':' << p->getHost()->getLabel();
+			++iter;
+			if (iter != P->getLeaves().end()) {
+				os << " ";
+			}
+		}
+		os << "\"";
+	}
+	os << endl;
+}
 ostream& operator<<(ostream& os, Cophylogeny& C) {
 	os << *(C.getHostTree());
 	for (Tree* P : C.getParasiteTrees()) {

@@ -20,11 +20,12 @@ extern bool _debugging;
 
 namespace kowhai {
 
+int Node::nodeCounter = 0;
+
 Node::Node() : parent(nullptr), firstChild(nullptr), sibling(nullptr), host(nullptr), _onHostVertex(false),
 		T(nullptr), CoP(nullptr), depth(-1), height(-1), timeIndex(-1), time(0.0), branchLength(0.0), _visited(false) {
-	static int nodeIndex(0);
-	++nodeIndex;
-	string str = "v" + to_string(nodeIndex);
+	++nodeCounter;
+	string str = "v" + to_string(nodeCounter);
 	setLabel(str);
 }
 

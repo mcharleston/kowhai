@@ -51,6 +51,7 @@ private:
 	double time;	// beginning at time t=0 at the root
 	double branchLength;
 	mutable bool _visited;
+	static int nodeCounter;
 public:
 	Node();
 	Node(std::string str) : label(str),
@@ -112,6 +113,8 @@ public:
 	bool operator<=(Node& o) { return this->isAncestralTo(&o); }
 
 	void putChildren(std::set<Node*>& children);
+
+	static void resetNodeCounter() { nodeCounter = 0; }
 
 	inline void setBranchLength(double d) { branchLength = d; }
 	void setFirstChild(Node* c);

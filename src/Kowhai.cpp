@@ -98,6 +98,7 @@ int main(int argn, char** argc) {
 	}
 	if (_sim) {
 		for (int s(0); s < numSamples; ++s) {
+			Node::resetNodeCounter();
 			Node* h = new Node();
 			Tree H(h);
 			H.growYule(numHosts);
@@ -109,26 +110,11 @@ int main(int argn, char** argc) {
 			}
 			C.coevolve();
 			if (_for_segdup) {
-				fseg << "-S \"";
-				H.writeNewick(fseg);
-				fseg << "\"";
-				for (auto P : C.getParasiteTrees()) {
-					fseg << " -G \"";
-					P->writeNewick(fseg);
-					fseg << "\" \"";
-					for (map<string, Node*>::iterator iter = P->getLeaves().begin(); iter != P->getLeaves().end(); ) {
-						Node* p = iter->second;
-						fseg << p->getLabel() << ':' << p->getHost()->getLabel();
-						++iter;
-						if (iter != P->getLeaves().end()) {
-							fseg << " ";
-						}
-					}
-					fseg << "\"";
-				}
-				fseg << endl;
+				C.outputForSegdup(cout);
+			} else {
+				cout << C;
+				C.outputForSegdup(fseg);
 			}
-			cout << C;
 		}
 
 	}
