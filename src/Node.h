@@ -42,7 +42,9 @@ private:
 	Node* sibling;
 	Node* host;	// e.g. if this is a parasite or gene, the host species;
 	bool _onHostVertex;
-	std::map<std::string, Node*> parasites;	// e.g. if this is a host, the parasites or genes on it
+	eventType event;
+//	std::map<std::string, Node*> parasites;	// e.g. if this is a host, the parasites or genes on it
+	std::set<Node*> parasites;	// e.g. if this is a host, the parasites or genes on it
 	Tree* T;
 	Cophylogeny* CoP;
 	int depth;
@@ -54,12 +56,13 @@ private:
 	static int nodeCounter;
 public:
 	Node();
+	explicit Node(const Node& n);
 	Node(std::string str) : label(str),
-				parent(nullptr), firstChild(nullptr), sibling(nullptr), host(nullptr), _onHostVertex(false),
+				parent(nullptr), firstChild(nullptr), sibling(nullptr), host(nullptr), _onHostVertex(false), event(noevent),
 				T(nullptr), CoP(nullptr), depth(-1), height(-1), timeIndex(-1), time(0.0), branchLength(0.0), _visited(false) {}
 	virtual ~Node();
 
-	void addParasite(Node* p) { parasites[p->getLabel()] = p; }
+	void addParasite(Node* p) { parasites.insert(p); }	//[p->getLabel()] = p; }
 	void addChild(Node* c);
 	inline void addToBranchLength(double d) { branchLength += d; }
 	void addSibling(Node *s);
@@ -86,10 +89,11 @@ public:
 	inline Node* getFirstChild() { return firstChild; }
 	inline Node* getHost() { return host; }
 	inline const Node* getHost() const { return host; }
+	double getHostSwitchRate() const;
 	inline std::string& getLabel() { return label; }
-	inline Node* getParasite(std::string str) { return parasites[str]; }
-	inline std::map<std::string, Node*>& getParasites() { return parasites; }
-	inline const std::map<std::string, Node*>& getParasites() const { return parasites; }
+//	inline Node* getParasite(std::string str) { return parasites[str]; }
+	inline std::set<Node*>& getParasites() { return parasites; }
+	inline const std::set<Node*>& getParasites() const { return parasites; }
 	inline Node* getParent() const { return parent; }
 	inline Node* getSibling() { return sibling; }
 	inline double getTime() const { return time; }
@@ -117,6 +121,7 @@ public:
 	static void resetNodeCounter() { nodeCounter = 0; }
 
 	inline void setBranchLength(double d) { branchLength = d; }
+	inline void setEvent(eventType e) { event = e; }
 	void setFirstChild(Node* c);
 	inline void setHost(Node* h) { host = h; }
 	inline void setLabel(std::string str) { label = str; }

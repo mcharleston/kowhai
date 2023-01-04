@@ -29,6 +29,11 @@ Node::Node() : parent(nullptr), firstChild(nullptr), sibling(nullptr), host(null
 	setLabel(str);
 }
 
+Node::Node(const Node& n) {
+	throw new app_exception("This copy constructor should not be called!");
+}
+
+
 Node::~Node() {
 	// Destroy the children first!
 	if (!isLeaf()) {
@@ -81,12 +86,18 @@ void Node::bifurcate(string a, string b) {
 }
 
 void Node::bifurcate(Node* u, Node* v) {
+	bool _debugging(true);
+	if (firstChild != nullptr) {
+		throw new app_exception("Node::bifurcate(Node *, Node*): attempting to bifurcate with existing child nodes!");
+	}
 	firstChild = u;
 	u->sibling = v;
 	u->parent = this;
 	u->T = T;
 	v->parent = this;
 	v->T = T;
+	T->getVertices()[u->getLabel()] = u;
+	T->getVertices()[v->getLabel()] = v;
 }
 
 void Node::calcDepth() {
@@ -128,6 +139,7 @@ void Node::codivergeWith(Node* h) {
 	Node* x = h->firstChild;
 	for (Node *c = firstChild; c != nullptr; c= c->sibling) {
 		c->setHost(x);
+		c->onHostVertex() = true;
 		x->addParasite(c);
 		DEBUG(cout << "Adding parasite " << c->getLabel() << " to host " << x->getLabel() << endl);
 		DEBUG(cout << c->getLabel() << ":" << x->getLabel() << endl);
@@ -158,8 +170,7 @@ void Node::diverge() {
 	 * 			These new nodes get the same time index as their parent; this will be updated when *they* get an event.
 	 */
 	bifurcate();
-	for (auto a : parasites) {
-		Node* p = a.second;
+	for (Node *p : parasites) {
 		if (p->getTimeIndex() == timeIndex) {
 			if (p->doesCodiverge()) {
 				p->bifurcate();
@@ -191,6 +202,10 @@ int Node::getHeight() {
 		calcHeight();
 	}
 	return height;
+}
+
+double Node::getHostSwitchRate() const {
+	return T->getHostSwitchRate();
 }
 
 bool Node::isAncestralTo(Node* other) {

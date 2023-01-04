@@ -24,7 +24,7 @@ std::uniform_real_distribution<float> runif(0.0, 1.0);
 std::uniform_real_distribution<double> dunif(0.0, 1.0);
 
 float fran() {
-	return runif(generator);
+	return dunif(generator);
 }
 
 double dran(double mult) {

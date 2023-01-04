@@ -226,6 +226,14 @@ int Tree::getDistUp(Node* lower, Node* upper) {
 	return distUp[std::pair<Node*, Node*>(lower, upper)];
 }
 
+void Tree::gatherLeaves() {
+	for (auto pr : getVertices()) {
+		Node* l = pr.second;
+		if (l->isLeaf()) {
+			L[l->getLabel()] = l;
+		}
+	}
+}
 
 void Tree::gatherVertices() {
 	V.clear();
@@ -237,12 +245,7 @@ void Tree::gatherVertices() {
 
 map<string, Node*>& Tree::getLeaves() {
 	if (L.size() == 0) {
-		for (auto pr : getVertices()) {
-			Node* l = pr.second;
-			if (l->isLeaf()) {
-				L[l->getLabel()] = l;
-			}
-		}
+		gatherLeaves();
 	}
 	return L;
 }
@@ -281,8 +284,8 @@ void Tree::growYule(int targetNumLeaves) {
 		Node* x = L[idx];
 		orderedNodes.push_back(x);
 		divTime = -log(fran()) / (birthRate * (double) numLeaves);
-		treeAge += divTime;
 		x->setTime(treeAge);
+		treeAge += divTime;
 		// Bifurcate it with no branch lengths assigned:
 		x->bifurcate();
 //		Node *y = new Node(), *z = new Node();

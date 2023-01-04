@@ -69,6 +69,7 @@ public:
 	inline bool& displayInternalLabels() { return _displayInternalLabels; }
 	const inline bool& displayInternalLabels() const { return _displayInternalLabels; }
 
+	void gatherLeaves();
 	void gatherVertices();
 
 	inline double getAge() const { return treeAge; }

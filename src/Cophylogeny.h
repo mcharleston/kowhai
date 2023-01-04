@@ -19,16 +19,21 @@ class Cophylogeny {
 private:
 	Tree* H;	// the underlying host tree
 	std::set<Tree*> PTrees;
-	std::map<int, std::set<Node*> > NodeByIndex;	// I need to come up with a better name for this
+//	std::map<int, std::set<Node*> > NodeByIndex;	// I need to come up with a better name for this
 		// NodeByIndex is the map of eventIndex -> <all Nodes at that timepoint>
+	std::map<double, std::set<Node*> > pNodeAtTime;
 	int currentTimeIndex;
 public:
 	Cophylogeny() : H(nullptr), currentTimeIndex(0) {}
 	virtual ~Cophylogeny() {}
 
 	void coevolve();
+	void cleverCoevolve();
 
 	Node* createParasiteRoot(Node *h, bool _onVertex);
+	Node* createParasiteRoot(Node *h, double beforeTime);
+
+//	void duplicate(Node* p, double t);
 
 	inline Tree* getHostTree() { return H; }
 	inline std::set<Tree*>& getParasiteTrees() { return PTrees; }
