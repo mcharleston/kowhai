@@ -1,0 +1,2 @@
+-S "(A,B)" -G "(a,b)" "a:A b:B" -n 10000 -d 10 -l 0.0 -Tinit 10.0 -o probs
+

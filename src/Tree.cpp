@@ -50,7 +50,7 @@ Tree::Tree(Node* r) : label("untitled"), root(r), labelSpace(0), numVertices(-1)
 Tree::Tree(char pre, std::string str) : root(nullptr), labelSpace(0), numVertices(-1), prefix(pre) {
 	if (str[0] == '(') {
 		constructFromNewickString(str);
-		calculateHeights(root);
+		calculateHeights();
 		calcAncestry();
 		_showInfo = false;
 	} else {
@@ -61,7 +61,7 @@ Tree::Tree(std::string str) : root(nullptr), labelSpace(0), numVertices(-1) {
 	prefix = 'v';
 	if (str[0] == '(') {
 		constructFromNewickString(str);
-		calculateHeights(root);
+		calculateHeights();
 		calcAncestry();
 		_showInfo = false;
 	} else {
@@ -101,9 +101,9 @@ void Tree::compressTraverseWrite(ostream& os) {
 	bool _debugging(false);
 	DEBUG(cout << "starting compressTraverseWrite" << endl);
 	DEBUG(if (root==nullptr) { cout << "Oops" << endl; } );
-	if (root->getHeight() < 0) {
-		DEBUG(cout << "root->getHeight() negative so calculating heights" << endl);
-		calculateHeights(root);
+	if (root->getHeight() <= 0) {
+		DEBUG(cout << "root->getHeight() non-positive so calculating heights" << endl);
+		calculateHeights();
 	}
 	DEBUG(cout << "Address of info map = " << info << endl);
 	bool _oldShowInfo(_showInfo);
@@ -119,6 +119,7 @@ void Tree::compressTraverseWrite(ostream& os) {
 	_showInfo = _oldShowInfo;
 }
 void Tree::compressTraverseWrite(ostream & os, Node* p) {
+	bool _debugging(false);
 	int
 		spacing;
 	char
@@ -134,7 +135,6 @@ void Tree::compressTraverseWrite(ostream & os, Node* p) {
  * from the time of the vertex, with time(root) = 1 and time(tips) = 1 typically.
  * Thus we have startpos = q->height and stoppos = p->height.  Let's give that a try...
  */
-		bool _debugging(false);
 //		DEBUG(cout << "starting compressTraverseWrite" << endl);
 		if (p != root) {
 			startpos = spacing*(root->getHeight()+1 - q->getHeight());
@@ -219,6 +219,30 @@ void Tree::constructFromNewickString(std::string str) {
 	}
 }
 
+string Tree::details() {
+	stringstream ss;
+	ss << "\troot = " << root->getLabel() << endl;
+	for (auto pr : V) {
+		string label = pr.first;
+		Node* v = pr.second;
+		ss << '\t' << label << " is ";
+		if (v->isLeaf()) {
+			ss << "a leaf" << endl;
+		} else {
+			ss << "internal, with children\t";
+			Node* c = v->getFirstChild();
+			while (c != nullptr) {
+				ss << c->getLabel() << ' ';
+				c = c->getSibling();
+			}
+			ss << endl;
+		}
+		ss << "\t\theight = " << v->getHeight() << endl;
+
+	}
+	return ss.str();
+}
+
 int Tree::getDistUp(Node* lower, Node* upper) {
 	if (distUp.size() == 0) {
 		calcAncestry();
@@ -226,6 +250,14 @@ int Tree::getDistUp(Node* lower, Node* upper) {
 	return distUp[std::pair<Node*, Node*>(lower, upper)];
 }
 
+void Tree::gatherLeaves() {
+	for (auto pr : getVertices()) {
+		Node* l = pr.second;
+		if (l->isLeaf()) {
+			L[l->getLabel()] = l;
+		}
+	}
+}
 
 void Tree::gatherVertices() {
 	V.clear();
@@ -237,12 +269,7 @@ void Tree::gatherVertices() {
 
 map<string, Node*>& Tree::getLeaves() {
 	if (L.size() == 0) {
-		for (auto pr : getVertices()) {
-			Node* l = pr.second;
-			if (l->isLeaf()) {
-				L[l->getLabel()] = l;
-			}
-		}
+		gatherLeaves();
 	}
 	return L;
 }
@@ -274,25 +301,16 @@ void Tree::growYule(int targetNumLeaves) {
 	int numLeaves = L.size();
 	double divTime = 0;
 	treeAge = 0;
-//	int vertexNumber(1);
 	while (numLeaves < targetNumLeaves) {
 		// Choose a leaf at random:
 		int idx = iran(L.size());
 		Node* x = L[idx];
 		orderedNodes.push_back(x);
 		divTime = -log(fran()) / (birthRate * (double) numLeaves);
-		treeAge += divTime;
 		x->setTime(treeAge);
+		treeAge += divTime;
 		// Bifurcate it with no branch lengths assigned:
 		x->bifurcate();
-//		Node *y = new Node(), *z = new Node();
-//		x->bifurcate(y, z);
-//		++vertexNumber;
-//		string label = prefix + to_string(vertexNumber);
-//		y->setLabel(label);
-//		++vertexNumber;
-//		label = prefix + to_string(vertexNumber);
-//		z->setLabel(label);
 		Node* y = x->getFirstChild();
 		Node *z = y->getSibling();
 		L[idx] = y; // replacing x in the array list
@@ -402,7 +420,7 @@ Tree& Tree::operator=(const string& str) {
 		for (auto n : V) {
 			n.second->setTree(this);
 		}
-		calculateHeights(root);
+		calculateHeights();
 		calcAncestry();
 		_showInfo = false;
 		return *this;

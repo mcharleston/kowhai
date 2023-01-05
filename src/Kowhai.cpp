@@ -17,7 +17,7 @@ using namespace kowhai;
 
 bool _debugging(false);
 bool _for_segdup(false);
-
+string hline("=================================================================\n");
 string kowhaiHelp("Kowhai Help");
 
 void testTreeConstructionAndOutput() {
@@ -53,9 +53,39 @@ void testCoevolveBirthModel() {
 	cout << C;
 }
 
+void testCleverCoevolve() {
+	Node* h = new Node();
+	Tree H(h);
+	H.growYule(10);
+	Cophylogeny C;
+	C.setHostTree(&H);
+	Node *p = C.createParasiteRoot(H.getRoot(), true);
+	Tree *P = p->getTree();
+	P->setCodivergenceProbability(1.0);
+	P->setBirthRate(2.0);
+	P->setDeathRate(0.0);
+	P->setHostSwitchRate(0.0);
+	P->calculateHeights();
+	C.cleverCoevolve();
+	P->setShowInfo(true);
+	C.storeAssociationInfo();
+	cout << C;
+}
+
 int main(int argn, char** argc) {
 	if (argn < 2) {
-		cout << kowhaiHelp << endl;
+//		Node* r = new Node();
+//		Tree T(r);
+//		cout << T;
+//		r->bifurcate();
+//		cout << T << T.details();
+//		cout << hline;
+//		Tree G;
+//		Node::resetNodeCounter();
+//		G.growYule(2);
+//		cout << G << G.details();
+		testCleverCoevolve();
+//		cout << kowhaiHelp << endl;
 		return 0;
 	}
 	bool _sim(false);
@@ -98,6 +128,7 @@ int main(int argn, char** argc) {
 	}
 	if (_sim) {
 		for (int s(0); s < numSamples; ++s) {
+			Node::resetNodeCounter();
 			Node* h = new Node();
 			Tree H(h);
 			H.growYule(numHosts);
@@ -109,26 +140,11 @@ int main(int argn, char** argc) {
 			}
 			C.coevolve();
 			if (_for_segdup) {
-				fseg << "-S \"";
-				H.writeNewick(fseg);
-				fseg << "\"";
-				for (auto P : C.getParasiteTrees()) {
-					fseg << " -G \"";
-					P->writeNewick(fseg);
-					fseg << "\" \"";
-					for (map<string, Node*>::iterator iter = P->getLeaves().begin(); iter != P->getLeaves().end(); ) {
-						Node* p = iter->second;
-						fseg << p->getLabel() << ':' << p->getHost()->getLabel();
-						++iter;
-						if (iter != P->getLeaves().end()) {
-							fseg << " ";
-						}
-					}
-					fseg << "\"";
-				}
-				fseg << endl;
+				C.outputForSegdup(cout);
+			} else {
+				cout << C;
+				C.outputForSegdup(fseg);
 			}
-			cout << C;
 		}
 
 	}

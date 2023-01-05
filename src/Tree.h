@@ -55,12 +55,13 @@ public:
 	Node* at(const std::string& str) { return V.at(str); }
 
 	void calcAncestry();
-	void calculateHeights();
-	inline void calculateHeights(Node* v) { root->calcHeight(); }
+	inline void calculateHeights() { root->calcHeight(); }
 	void compressTraverseWrite(std::ostream& os);
 	void compressTraverseWrite(std::ostream& os, Node* v);
 	void constructFromNewickString(std::string str);
 //	void compressTraverseWriteOld(std::ostream& os, Node* v, bool _showAssociations = false);
+
+	std::string details();
 
 	TreeDisplayFormat& displayAs() { return displayFormat; }
 	const TreeDisplayFormat& displayAs() const { return displayFormat; }
@@ -69,6 +70,7 @@ public:
 	inline bool& displayInternalLabels() { return _displayInternalLabels; }
 	const inline bool& displayInternalLabels() const { return _displayInternalLabels; }
 
+	void gatherLeaves();
 	void gatherVertices();
 
 	inline double getAge() const { return treeAge; }
@@ -111,7 +113,7 @@ public:
 	void setHostSwitchRate(double d) { hostSwitchRate = d; }
 	void setNodeLabel(const std::string& str, const std::string& newlabel);
 	void setNodeLabel(Node* n, const std::string& newlabel);
-	void setRoot(Node* r) { root = r; }
+	void setRoot(Node* r) { root = r; r->setTree(this); }
 	void setShowInfo(bool b) { _showInfo = b; }
 
 	void writeNewick(std::ostream& os);

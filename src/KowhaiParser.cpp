@@ -123,7 +123,7 @@ void KowhaiParser::parseNewickTree(Tree* T) {
 	parseNewickSubtree(root, T->getPrefixChar());
 	T->setRoot(root);
 	T->gatherVertices();
-	T->calculateHeights(root);
+	T->calculateHeights();
 }
 
 void KowhaiParser::parseNewickSubtree(Node* v, char prefix) {
