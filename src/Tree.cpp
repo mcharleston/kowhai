@@ -225,19 +225,21 @@ string Tree::details() {
 	for (auto pr : V) {
 		string label = pr.first;
 		Node* v = pr.second;
-		ss << '\t' << label << " is ";
+		ss << '\t' << label;
+		ss << "\theight=" << v->getHeight() << ";";
+		ss << "\ttime=" << v->getTime() << "\t";
 		if (v->isLeaf()) {
-			ss << "a leaf" << endl;
+			ss << " is a leaf";
 		} else {
-			ss << "internal, with children\t";
+			ss << " is internal, with children { ";
 			Node* c = v->getFirstChild();
 			while (c != nullptr) {
 				ss << c->getLabel() << ' ';
 				c = c->getSibling();
 			}
-			ss << endl;
+			ss << "}";
 		}
-		ss << "\t\theight = " << v->getHeight() << endl;
+		ss << endl;
 
 	}
 	return ss.str();

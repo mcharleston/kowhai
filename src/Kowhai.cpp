@@ -54,14 +54,15 @@ void testCoevolveBirthModel() {
 }
 
 void testCleverCoevolve() {
+	cout << hline << "TESTING cleverCoevolve" << endl << hline;
 	Node* h = new Node();
 	Tree H(h);
-	H.growYule(10);
+	H.growYule(6);
 	Cophylogeny C;
 	C.setHostTree(&H);
 	Node *p = C.createParasiteRoot(H.getRoot(), true);
 	Tree *P = p->getTree();
-	P->setCodivergenceProbability(1.0);
+	P->setCodivergenceProbability(0.8);
 	P->setBirthRate(2.0);
 	P->setDeathRate(0.0);
 	P->setHostSwitchRate(0.0);
@@ -70,20 +71,11 @@ void testCleverCoevolve() {
 	P->setShowInfo(true);
 	C.storeAssociationInfo();
 	cout << C;
+	cout << hline << "TESTING COMPLETE" << endl << hline;
 }
 
 int main(int argn, char** argc) {
 	if (argn < 2) {
-//		Node* r = new Node();
-//		Tree T(r);
-//		cout << T;
-//		r->bifurcate();
-//		cout << T << T.details();
-//		cout << hline;
-//		Tree G;
-//		Node::resetNodeCounter();
-//		G.growYule(2);
-//		cout << G << G.details();
 		testCleverCoevolve();
 //		cout << kowhaiHelp << endl;
 		return 0;

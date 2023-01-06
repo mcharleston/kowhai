@@ -99,10 +99,21 @@ void Cophylogeny::cleverCoevolve() {
 	double eventRate;
 	vector<Node*> parasToRemove;
 	set<Node*> availableHosts;
+	DEBUG(cout << "HOST TREE:" << endl << *H);
 	for (std::map<double, std::set<Node*> >::iterator moment = pNodeAtTime.begin();
 			moment != pNodeAtTime.end(); ++moment) {// currentPs : pNodeAtTime) {
-		DEBUG(cout << "Time point: " << t << endl);
-		DEBUG(cout << "|pNodeAtTime| = " << pNodeAtTime.size() << endl);
+		DEBUG(cout << "Time point: " << moment->first << endl);
+		DEBUG(
+				cout << "Nodes by time:" << endl;
+				for (auto pr : pNodeAtTime) {
+					cout << "\t" << pr.first << ": { ";
+					for (Node* p : pr.second) {
+						cout << p->getLabel() << " ";
+					}
+					cout <<"}" << endl;
+				}
+		);
+//		DEBUG(cout << "|pNodeAtTime| = " << pNodeAtTime.size() << endl);
 		set<Node*> occupants = moment->second;
 //		set<Node*> occupants = currentPs.second;
 		DEBUG(
@@ -114,15 +125,26 @@ void Cophylogeny::cleverCoevolve() {
 		);
 		Node* n = *(occupants.begin());
 		Node* h = n->getHost();
+		set<Node*> nuNodes;
 		if (n->onHostVertex()) {
+			if (h->isLeaf()) {
+				continue;
+			}
+			// CODIVERGENCE or LINEAGE SORTING
 			DEBUG(cout << "This is on the host vertex " << h->getLabel() << endl);
+			double nextHostEventTime(t_final + 1.0);
 			// do codivergence and lineage sorting
 			for (Node* p : occupants) {
 				if (p->doesCodiverge()) {
 					DEBUG(cout << p->getLabel() << " codiverges with this host" << endl);
 					p->codivergeWith(h);
-					p->getFirstChild()->onHostVertex() = true;
-					p->getFirstChild()->getSibling()->onHostVertex() = true;
+					for (Node *c = p->getFirstChild(); c != nullptr; c = c->getSibling()) {
+						c->onHostVertex() = true;
+						nuNodes.insert(c);
+						c->setTime(c->getHost()->getTime());
+						nextHostEventTime = min(nextHostEventTime, c->getTime());
+						DEBUG(cout << "\t" << c->getLabel() <<":" << c->getHost()->getLabel() << "; t=" << c->getTime() << endl);
+					}
 				} else {
 					// select one nascent host lineage at uniform random:
 					Node* nuHost = h->getFirstChild();
@@ -134,18 +156,23 @@ void Cophylogeny::cleverCoevolve() {
 					p->setHost(nuHost);
 					p->onHostVertex() = true;
 					nuHost->addParasite(p);
-					parasToRemove.push_back(p);
+					nuNodes.insert(p);
+					nextHostEventTime = min(nextHostEventTime, nuHost->getTime());
 				}
 			}
-			for (Node* q : parasToRemove) {
-				h->getParasites().erase(q);	// may not need to do this.
+			for (Node* nu : nuNodes) {
+				pNodeAtTime[nu->getHost()->getTime()].insert(nu);
 			}
+			t = nextHostEventTime;
+//			for (Node* q : parasToRemove) {
+//				h->getParasites().erase(q);	// may not need to do this.
+//			}
 		} else {
 			DEBUG(cout << "This is on the edge above " << h->getLabel() << endl);
 			// check all active parasite nodes for other events
 			eventRate = 0.0;
 			availableHosts.clear();
-			double nextHostEventTime(0.0);
+			double nextHostEventTime(0.0); // TODO This is going to always put the next time to 0!!!
 			for (Node* p : occupants) {
 				eventRate += p->getBirthRate();
 				eventRate += p->getDeathRate();
@@ -161,6 +188,7 @@ void Cophylogeny::cleverCoevolve() {
 			DEBUG(cout << "Next event is at time " << (t+t_next) << endl);
 			if (t + t_next > nextHostEventTime) {
 				DEBUG(cout << "Setting to the next time point, being a host node" << endl);
+				throw new app_exception("There is more to do here: because the next event time is after the next host node, I need to set up for codivergence events next.");
 				t = nextHostEventTime;
 				continue;	// no more events before the next host node
 			}
@@ -197,6 +225,7 @@ void Cophylogeny::cleverCoevolve() {
 				q->setTime(t);
 				q->onHostVertex() = false;
 				h->getParasites().erase(q);
+				DEBUG(cout << "Checking children of newly duplicated " << q->getLabel() << endl);
 				for (Node * c = q->getFirstChild(); c != nullptr; c = c->getSibling()) {
 					c->setHost(h);
 					h->getParasites().insert(c);
@@ -244,12 +273,13 @@ void Cophylogeny::cleverCoevolve() {
 //			DEBUG(cout << *this);
 //			DEBUG(q->getTree()->gatherVertices());
 //			DEBUG(q->getTree()->gatherLeaves());
-			DEBUG(cout << *(q->getTree()) << endl);
 			DEBUG(cout << "|pNodeAtTime| = " << pNodeAtTime.size() << endl);
 		}
-		if (t >= t_final) {
-			break;
-		}
+		DEBUG(cout << *this);
+//		if (t >= t_final) {
+//			DEBUG(cout << "This is at or beyond the age of the host tree so coevolution is stopping." << endl);
+//			break;
+//		}
 	}
 }
 
@@ -342,10 +372,11 @@ void Cophylogeny::outputForSegdup(ostream& os) {
 	os << endl;
 }
 ostream& operator<<(ostream& os, Cophylogeny& C) {
-	os << *(C.getHostTree());
+	os << *(C.getHostTree()) << C.getHostTree()->details();
+	C.storeAssociationInfo();
 	for (Tree* P : C.getParasiteTrees()) {
 		P->setShowInfo(true);
-		os << *P;
+		os << *P << P->details();
 	}
 	return os;
 }
