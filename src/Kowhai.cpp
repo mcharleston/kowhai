@@ -57,7 +57,7 @@ void testCleverCoevolve() {
 	cout << hline << "TESTING cleverCoevolve" << endl << hline;
 	Node* h = new Node();
 	Tree H(h);
-	H.growYule(6);
+	H.growYule(10);
 	Cophylogeny C;
 	C.setHostTree(&H);
 	Node *p = C.createParasiteRoot(H.getRoot(), true);
@@ -67,10 +67,22 @@ void testCleverCoevolve() {
 	P->setDeathRate(0.0);
 	P->setHostSwitchRate(0.0);
 	P->calculateHeights();
-	C.cleverCoevolve();
 	P->setShowInfo(true);
+	P->setLabel("P");
+	Node* q = C.createParasiteRoot(H.getRoot(), true);
+	Tree *Q = q->getTree();
+	Q->setCodivergenceProbability(1.0);
+	Q->setBirthRate(1.0);
+	Q->setDeathRate(0.0);
+	Q->setHostSwitchRate(0.0);
+	Q->calculateHeights();
+	Q->setShowInfo(true);
+	Q->setLabel("Q");
+	C.cleverCoevolve();
 	C.storeAssociationInfo();
 	cout << C;
+	cout << "Output for segdup:" << endl;
+	C.outputForSegdup(cout);
 	cout << hline << "TESTING COMPLETE" << endl << hline;
 }
 

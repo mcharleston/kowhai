@@ -372,11 +372,11 @@ void Cophylogeny::outputForSegdup(ostream& os) {
 	os << endl;
 }
 ostream& operator<<(ostream& os, Cophylogeny& C) {
-	os << *(C.getHostTree()) << C.getHostTree()->details();
+	os << "Host tree:" << endl << *(C.getHostTree());// << C.getHostTree()->details();
 	C.storeAssociationInfo();
 	for (Tree* P : C.getParasiteTrees()) {
 		P->setShowInfo(true);
-		os << *P << P->details();
+		os << P->getLabel() << ":" << endl << *P;// << P->details();
 	}
 	return os;
 }
