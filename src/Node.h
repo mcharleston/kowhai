@@ -36,6 +36,7 @@ class Node {
 	friend class CophyMultiMap;	// so many friends... probably should cut down.
 
 private:
+	bool _extant;
 	std::string label;
 	Node* parent;
 	Node* firstChild;
@@ -57,7 +58,7 @@ private:
 public:
 	Node();
 	explicit Node(const Node& n);
-	Node(std::string str) : label(str),
+	Node(std::string str) : _extant(false), label(str),
 				parent(nullptr), firstChild(nullptr), sibling(nullptr), host(nullptr), _onHostVertex(false), event(noevent),
 				T(nullptr), CoP(nullptr), depth(-1), height(-1), timeIndex(-1), time(0.0), branchLength(0.0), _visited(false) {}
 	virtual ~Node();
@@ -79,6 +80,9 @@ public:
 
 	void diverge();
 	bool doesCodiverge();
+
+	bool& extant() { return _extant; }
+	const bool& extant() const { return _extant; }
 
 	double getBirthRate() const;
 	double getBranchLength() const { return branchLength; }
@@ -130,6 +134,7 @@ public:
 	inline void setTime(double d) { time = d; }
 	inline void setTimeIndex(int idx) { timeIndex = idx; }
 	inline void setTree(Tree *tr) { T = tr; }
+	void storeNodeTimes(std::map<double, std::set<Node*>>& M);
 
 	void writeNewick(std::ostream& os);
 };

@@ -53,7 +53,7 @@ void testCoevolveBirthModel() {
 	cout << C;
 }
 
-void testCleverCoevolve() {
+void testCoevolve() {
 	cout << hline << "TESTING cleverCoevolve" << endl << hline;
 	Node* h = new Node();
 	Tree H(h);
@@ -78,7 +78,31 @@ void testCleverCoevolve() {
 	Q->calculateHeights();
 	Q->setShowInfo(true);
 	Q->setLabel("Q");
-	C.cleverCoevolve();
+	C.correctCoevolve();
+	C.storeAssociationInfo();
+	cout << C;
+	cout << "Output for segdup:" << endl;
+	C.outputForSegdup(cout);
+	cout << hline << "TESTING COMPLETE" << endl << hline;
+}
+
+void testHostSwitching() {
+	cout << hline << "TESTING Host Switching" << endl << hline;
+	Node* h = new Node();
+	Tree H(h);
+	H.growYule(10);
+	Cophylogeny C;
+	C.setHostTree(&H);
+	Node *p = C.createParasiteRoot(H.getRoot(), true);
+	Tree *P = p->getTree();
+	P->setCodivergenceProbability(0.8);
+	P->setBirthRate(20.0);
+	P->setDeathRate(0.0);
+	P->setHostSwitchRate(0.0);
+	P->calculateHeights();
+	P->setShowInfo(true);
+	P->setLabel("P");
+	C.correctCoevolve();
 	C.storeAssociationInfo();
 	cout << C;
 	cout << "Output for segdup:" << endl;
@@ -88,7 +112,8 @@ void testCleverCoevolve() {
 
 int main(int argn, char** argc) {
 	if (argn < 2) {
-		testCleverCoevolve();
+		testCoevolve();
+//		testCleverCoevolve();
 //		cout << kowhaiHelp << endl;
 		return 0;
 	}

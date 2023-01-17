@@ -29,6 +29,7 @@ public:
 
 	void coevolve();
 	void cleverCoevolve();
+	void correctCoevolve();
 
 	Node* createParasiteRoot(Node *h, bool _onVertex);
 	Node* createParasiteRoot(Node *h, double beforeTime);

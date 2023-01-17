@@ -22,7 +22,7 @@ namespace kowhai {
 
 int Node::nodeCounter = 0;
 
-Node::Node() : parent(nullptr), firstChild(nullptr), sibling(nullptr), host(nullptr), _onHostVertex(false),
+Node::Node() : _extant(false), parent(nullptr), firstChild(nullptr), sibling(nullptr), host(nullptr), _onHostVertex(false),
 		T(nullptr), CoP(nullptr), depth(-1), height(-1), timeIndex(-1), time(0.0), branchLength(0.0), _visited(false) {
 	++nodeCounter;
 	string str = "v" + to_string(nodeCounter);
@@ -247,6 +247,14 @@ void Node::putChildren(set<Node*>& children) {
 void Node::setFirstChild(Node* c) {
 	firstChild = c;
 	c->parent = this;
+}
+
+void Node::storeNodeTimes(std::map<double, std::set<Node*>>& M) {
+	std::set<Node*>& S = M[time];
+	S.insert(this);
+	for (Node* c = firstChild; c != nullptr; c = c->getSibling()) {
+		c->storeNodeTimes(M);
+	}
 }
 
 void Node::writeNewick(ostream& os) {
