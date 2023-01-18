@@ -5,6 +5,7 @@
  *      Author: mac
  */
 
+#include <map>
 #include <set>
 #include <stdio.h>
 
@@ -138,7 +139,7 @@ void Node::calcHeight() {
 }
 
 void Node::codivergeWith(Node* h) {
-	bool _debugging(false);
+	bool _debugging(true);
 	if (h->isLeaf()) {
 		throw new app_exception("Node::codivergeWith(h): host node h=" + h->getLabel() + " is a leaf" );
 	}
@@ -156,7 +157,7 @@ void Node::codivergeWith(Node* h) {
 }
 
 bool Node::doesCodiverge() {
-	bool _debugging(false);
+	bool _debugging(true);
 	double prob = T->getCodivergenceProbability();
 	double r(fran());
 	DEBUG(cout << "Codivergence probability: " << prob << "; r = " << r << endl);
@@ -216,6 +217,24 @@ double Node::getHostSwitchRate() const {
 	return T->getHostSwitchRate();
 }
 
+double Node::getMaxDescendantTime() const {
+	if (isLeaf()) {
+		return time;
+	}
+	double t = time;
+	for (Node* c = firstChild; c != nullptr; c = c->sibling) {
+		t = std::max(t, c->getMaxDescendantTime());
+	}
+	return t;
+}
+
+void Node::initialiseOccupants(std::map<double, std::set<Node*>>& occ) {
+	occ[time];
+	for (Node* c = firstChild; c != nullptr; c = c->sibling) {
+		c->initialiseOccupants(occ);
+	}
+}
+
 bool Node::isAncestralTo(Node* other) {
 	return (T->isAncestralTo(this, other));
 }
@@ -241,6 +260,13 @@ Node* Node::next() {
 void Node::putChildren(set<Node*>& children) {
 	for (Node* c = firstChild; c != nullptr; c = c->sibling) {
 		children.insert(c);
+	}
+}
+
+void Node::scaleBy(double d) {
+	time *= d;
+	for (Node* c = firstChild; c != nullptr; c = c->sibling) {
+		c->scaleBy(d);
 	}
 }
 

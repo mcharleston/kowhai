@@ -24,10 +24,13 @@ const short codivergenceEvent(1);
 enum eventType {
 	codivergence,
 	duplication,
-	loss,
+	hostswitch,
+	death,
+	lineagesort,
+	samplingfailure,
 	noevent
 };
-const char eventSymbol[4]{'<','=','x',' '};
+const char eventSymbol[7]{'<','=','%','x','/','_',' '};
 
 class Node {
 
@@ -88,6 +91,7 @@ public:
 	double getBranchLength() const { return branchLength; }
 	double getDeathRate() const;
 	int getDepth();
+	char getEvent() const { return event; }
 	int getHeight();
 	inline const std::string& getLabel() const { return label; }
 	inline Node* getFirstChild() { return firstChild; }
@@ -96,6 +100,7 @@ public:
 	double getHostSwitchRate() const;
 	inline std::string& getLabel() { return label; }
 //	inline Node* getParasite(std::string str) { return parasites[str]; }
+	double getMaxDescendantTime() const;
 	inline std::set<Node*>& getParasites() { return parasites; }
 	inline const std::set<Node*>& getParasites() const { return parasites; }
 	inline Node* getParent() const { return parent; }
@@ -110,6 +115,7 @@ public:
 
 	bool isAncestralTo(Node* other);
 	void inferEvents();
+	void initialiseOccupants(std::map<double, std::set<Node*>>& occ);
 
 	inline bool isFirstChild() { if (parent==nullptr) return false; return (parent->firstChild==this); }
 	inline bool isLeaf() const { return firstChild==nullptr; }
@@ -123,6 +129,8 @@ public:
 	void putChildren(std::set<Node*>& children);
 
 	static void resetNodeCounter() { nodeCounter = 0; }
+
+	void scaleBy(double d);
 
 	inline void setBranchLength(double d) { branchLength = d; }
 	inline void setEvent(eventType e) { event = e; }

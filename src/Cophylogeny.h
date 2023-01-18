@@ -21,7 +21,7 @@ private:
 	std::set<Tree*> PTrees;
 //	std::map<int, std::set<Node*> > NodeByIndex;	// I need to come up with a better name for this
 		// NodeByIndex is the map of eventIndex -> <all Nodes at that timepoint>
-	std::map<double, std::set<Node*> > pNodeAtTime;
+	std::map<double, std::set<Node*> > occupantsAtTime;
 	int currentTimeIndex;
 public:
 	Cophylogeny() : H(nullptr), currentTimeIndex(0) {}
@@ -30,6 +30,7 @@ public:
 	void coevolve();
 	void cleverCoevolve();
 	void correctCoevolve();
+	void cospec();
 
 	Node* createParasiteRoot(Node *h, bool _onVertex);
 	Node* createParasiteRoot(Node *h, double beforeTime);

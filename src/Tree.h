@@ -55,6 +55,7 @@ public:
 	Node* at(const std::string& str) { return V.at(str); }
 
 	void calcAncestry();
+	void calcAge();
 	inline void calculateHeights() { root->calcHeight(); }
 	void compressTraverseWrite(std::ostream& os);
 	void compressTraverseWrite(std::ostream& os, Node* v);
@@ -92,7 +93,10 @@ public:
 	Node* getRoot() { return root; }
 	inline bool getShowInfo() const { return _showInfo; }
 	std::map<std::string, Node*>& getVertices() { if (V.size() == 0) { gatherVertices(); } return V; }
+
 	void growYule(int numLeaves);
+
+	void initialiseOccupants(std::map<double, std::set<Node*>>& occ) { root->initialiseOccupants(occ); }
 
 	bool isAncestralTo(Node* x, Node* y);
 
@@ -104,6 +108,8 @@ public:
 	Tree& operator=(const std::string& str);
 
 	void putInternalVertices(std::set<Node*>& IV);
+
+	void scaleTo(double d);
 
 	void setBirthRate(double d) { birthRate = d; }
 	void setCodivergenceProbability(double d) { codivergenceProbability = d; }

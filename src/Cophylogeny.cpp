@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "../utility/appexception.h"
+#include "../utility/approx.h"
 #include "../utility/debugging.h"
 #include "../utility/myrandom.h"
 #include "Cophylogeny.h"
@@ -35,7 +36,7 @@ void Cophylogeny::coevolve() {
 
 	// Host tree nodes are sorted in time order from t=0 to t=t_max (the leaves)
 	Node *h;
-	int eventIndex(0);
+//	int eventIndex(0);
 	vector<Node*> orderedHostNodes = H->getOrderedNodes();
 	int i(0);
 	vector<Node*> remove;
@@ -92,7 +93,7 @@ void Cophylogeny::cleverCoevolve() {
 //			}
 //			cout << (*H)
 //	);
-	double t = pNodeAtTime.begin()->first;	// the first event in time since map is *ordered*
+	double t = occupantsAtTime.begin()->first;	// the first event in time since map is *ordered*
 	DEBUG(cout << "First event at time t = " << t << endl);
 	double t_final = H->getAge();	// this is a time from 0 to the present
 	DEBUG(cout << "Last event at time t = " << t_final << endl);
@@ -100,12 +101,13 @@ void Cophylogeny::cleverCoevolve() {
 	vector<Node*> parasToRemove;
 	set<Node*> availableHosts;
 	DEBUG(cout << "HOST TREE:" << endl << *H);
-	for (std::map<double, std::set<Node*> >::iterator moment = pNodeAtTime.begin();
-			moment != pNodeAtTime.end(); ++moment) {// currentPs : pNodeAtTime) {
+	for (std::map<double, std::set<Node*> >::iterator moment = occupantsAtTime.begin();
+			moment != occupantsAtTime.end(); ++moment) {// currentPs : pNodeAtTime) {
+		double t_final = H->getAge();	// this is a time from 0 to the present
 		DEBUG(cout << "Time point: " << moment->first << endl);
 		DEBUG(
 				cout << "Nodes by time:" << endl;
-				for (auto pr : pNodeAtTime) {
+				for (auto pr : occupantsAtTime) {
 					cout << "\t" << pr.first << ": { ";
 					for (Node* p : pr.second) {
 						cout << p->getLabel() << " ";
@@ -161,7 +163,7 @@ void Cophylogeny::cleverCoevolve() {
 				}
 			}
 			for (Node* nu : nuNodes) {
-				pNodeAtTime[nu->getHost()->getTime()].insert(nu);
+				occupantsAtTime[nu->getHost()->getTime()].insert(nu);
 			}
 			t = nextHostEventTime;
 //			for (Node* q : parasToRemove) {
@@ -231,7 +233,7 @@ void Cophylogeny::cleverCoevolve() {
 					h->getParasites().insert(c);
 					c->setTime(t);
 					c->onHostVertex() = false;
-					pNodeAtTime[t].insert(c);	// now the edges descendant from q are available for events at the next timestep
+					occupantsAtTime[t].insert(c);	// now the edges descendant from q are available for events at the next timestep
 					DEBUG(cout << "New parasite node " << c->getLabel() << " on host " << h->getLabel() << " at time " << t << endl);
 					DEBUG(cout << "\t which has parent " << q->getLabel() << endl);
 				}
@@ -254,26 +256,26 @@ void Cophylogeny::cleverCoevolve() {
 				h->getParasites().insert(c);
 				c->setTime(t);
 				c->onHostVertex() = false;
-				pNodeAtTime[t].insert(c);
+				occupantsAtTime[t].insert(c);
 				c = c->getSibling();
 				Node *nuhost = getRandomElement<Node*>(availableHosts);
-				c->setHost(h);
-				h->getParasites().insert(c);
+				c->setHost(nuhost);
+				nuhost->getParasites().insert(c);
 				c->setTime(t);
 				c->onHostVertex() = false;
-				pNodeAtTime[t].insert(c);
+				occupantsAtTime[t].insert(c);
 			} else {
 				// DEATH
 				DEBUG(cout << "EXTINCTION (LOSS) event:" << endl);
 				q->setTime(t);
 				q->onHostVertex() = false;
-				q->setEvent(loss);
+				q->setEvent(death);
 				h->getParasites().erase(q);
 			}
 //			DEBUG(cout << *this);
 //			DEBUG(q->getTree()->gatherVertices());
 //			DEBUG(q->getTree()->gatherLeaves());
-			DEBUG(cout << "|pNodeAtTime| = " << pNodeAtTime.size() << endl);
+			DEBUG(cout << "|pNodeAtTime| = " << occupantsAtTime.size() << endl);
 		}
 		DEBUG(cout << *this);
 //		if (t >= t_final) {
@@ -285,14 +287,15 @@ void Cophylogeny::cleverCoevolve() {
 
 void Cophylogeny::correctCoevolve() {
 	bool _debugging(true);
-//	DEBUG(
-//			for (auto pr : H->getVertices()) {
-//				Node* h = pr.second;
-//				cout << "\ttime of vertex " << h->getLabel() << " is " << h->getTime() << endl;
-//			}
-//			cout << (*H)
-//	);
-	double t = pNodeAtTime.begin()->first;	// the first event in time since map is *ordered*
+	DEBUG(
+			for (auto pr : H->getVertices()) {
+				Node* h = pr.second;
+				cout << "\ttime of vertex " << h->getLabel() << " is " << h->getTime() << endl;
+			}
+			cout << (*H)
+	);
+	double t = occupantsAtTime.begin()->first;	// the first event in time since map is *ordered*
+	H->initialiseOccupants(occupantsAtTime);
 	DEBUG(cout << "First event at time t = " << t << endl);
 	double t_final = H->getAge();	// this is a time from 0 to the present
 	DEBUG(cout << "Last event at time t = " << t_final << endl);
@@ -307,9 +310,17 @@ void Cophylogeny::correctCoevolve() {
 //	Node* nextHost = hNodes.begin().second.begin();
 	DEBUG(cout << "HOST TREE:" << endl << *H);
 	set<Node*> nuNodes;
-
-	for (std::map<double, std::set<Node*> >::iterator moment = pNodeAtTime.begin();
-			moment != pNodeAtTime.end(); ++moment) {
+	cout << "|pNodes| = " << occupantsAtTime.size() << endl;
+	for (std::map<double, std::set<Node*> >::iterator moment = occupantsAtTime.begin();
+			moment != occupantsAtTime.end(); ++moment) {
+		cout << "t=" << moment->first << "\t; pNodes={";
+		for (Node* p : moment->second) {
+			cout << " " << p->getLabel();
+		}
+		cout << " }" << endl;
+	}
+	for (std::map<double, std::set<Node*> >::iterator moment = occupantsAtTime.begin();
+			moment != occupantsAtTime.end(); ++moment) {
 
 		auto nextMoment = moment;
 		++nextMoment;	// need the *next* moment in time
@@ -355,6 +366,7 @@ void Cophylogeny::correctCoevolve() {
 							c->onHostVertex() = true;
 							nuNodes.insert(c);
 							c->setTime(c->getHost()->getTime());
+							occupantsAtTime[c->getTime()].insert(c);
 							nextHostEventTime = min(nextHostEventTime, c->getTime());
 							DEBUG(cout << "\t" << c->getLabel() <<":" << c->getHost()->getLabel() << "; t=" << c->getTime() << endl);
 						}
@@ -369,12 +381,13 @@ void Cophylogeny::correctCoevolve() {
 						p->setHost(nuHost);
 						p->onHostVertex() = true;
 						nuHost->addParasite(p);
+						occupantsAtTime[nuHost->getTime()].insert(p);
 						nuNodes.insert(p);
 						nextHostEventTime = min(nextHostEventTime, nuHost->getTime());
 					}
 				}
 				for (Node* nu : nuNodes) {
-					pNodeAtTime[nu->getHost()->getTime()].insert(nu);
+					occupantsAtTime[nu->getHost()->getTime()].insert(nu);
 				}
 				t = nextHostEventTime;
 				DEBUG(cout << "Setting to the next time point, being a host node" << endl);
@@ -402,7 +415,7 @@ void Cophylogeny::correctCoevolve() {
 					/*
 					 *  	bifurcate p
 					 *  	take this p off h and replace it with its two children
-					 *  	add these two child ps to pNodeAtTime with the new time
+					 *  	add these two child ps to occupantsAtTime with the new time
 					 */
 					DEBUG(cout << "DUPLICATION event:" << endl);
 					h = q->getHost();
@@ -424,7 +437,7 @@ void Cophylogeny::correctCoevolve() {
 						h->getParasites().insert(c);
 						c->setTime(t);
 						c->onHostVertex() = false;
-						pNodeAtTime[t].insert(c);	// now the edges descendant from q are available for events at the next timestep
+						occupantsAtTime[t].insert(c);	// now the edges descendant from q are available for events at the next timestep
 						DEBUG(cout << "New parasite node " << c->getLabel() << " on host " << h->getLabel() << " at time " << t << endl);
 						DEBUG(cout << "\t which has parent " << q->getLabel() << endl);
 					}
@@ -446,25 +459,25 @@ void Cophylogeny::correctCoevolve() {
 					h->getParasites().insert(c);
 					c->setTime(t);
 					c->onHostVertex() = false;
-					pNodeAtTime[t].insert(c);
+					occupantsAtTime[t].insert(c);
 					c = c->getSibling();
 					Node *nuhost = getRandomElement<Node*>(availableHosts);
 					c->setHost(nuhost);
 					nuhost->getParasites().insert(c);
 					c->setTime(t);
 					c->onHostVertex() = false;
-					pNodeAtTime[t].insert(c);
+					occupantsAtTime[t].insert(c);
 				} else {	// DEATH
 					DEBUG(cout << "EXTINCTION (LOSS) event:" << endl);
 					q->setTime(t);
 					q->onHostVertex() = false;
-					q->setEvent(loss);
+					q->setEvent(death);
 					h->getParasites().erase(q);
 				}
 	//			DEBUG(cout << *this);
 	//			DEBUG(q->getTree()->gatherVertices());
 	//			DEBUG(q->getTree()->gatherLeaves());
-				DEBUG(cout << "|pNodeAtTime| = " << pNodeAtTime.size() << endl);
+				DEBUG(cout << "|occupantsAtTime| = " << occupantsAtTime.size() << endl);
 			}
 			if (t >= t_max) {
 				break;
@@ -480,6 +493,197 @@ void Cophylogeny::correctCoevolve() {
 //			DEBUG(cout << "This is at or beyond the age of the host tree so coevolution is stopping." << endl);
 //			break;
 //		}
+	}
+}
+
+void Cophylogeny::cospec()
+{
+	// new try
+	bool _debugging(true);
+	set<Node*> active;
+	double t_0(H->getAge());	// max possible time of anything in the Host tree
+	// Find first "active" Parasite nodes: those that can do anything
+	Tree* P = *(PTrees.begin());
+	active.insert(P->getRoot());
+	for (Tree* P : PTrees) {
+		Node* r = P->getRoot();
+		if (r->getTime() < t_0) {
+			t_0 = r->getTime();
+			active.clear();
+			active.insert(r);
+		} else if (r->getTime() == t_0) {
+			active.insert(r);
+		}
+	}
+	DEBUG(cout << "COEVOLVE" << endl);
+	DEBUG(
+		cout << "Initial active set of parasites: { ";
+		for (Node *p : active) {
+			cout << p->getLabel() << '@' << p->getTime() << ' ';
+		}
+		cout << "}" << endl;
+	);
+	double t_final = H->getAge();	// this is a time from 0 to the present
+	Node* h;
+	map<double, set<Node*>> hNodeTimes;
+	H->getRoot()->storeNodeTimes(hNodeTimes);
+	DEBUG(
+		for (auto pr : hNodeTimes) {
+			cout << pr.first << endl;
+		}
+	);
+	hNodeTimes[t_0].insert(active.begin(), active.end());
+	double eventRate;
+	set<Node*> availableHosts;
+	double t(t_0);
+	approx roughlyEqual(0.000001);	// functor to return true iff input numbers are within this tolerance of each other.
+	for (map<double, set<Node*>>::iterator moment = hNodeTimes.begin(); moment != hNodeTimes.end(); ++moment) {
+		auto nextMoment = moment;
+		DEBUG(cout << "Current host time = " << moment->first << endl);
+		++nextMoment;	// need the *next* moment in time
+		double nextHostTimePoint = nextMoment->first;
+		while (t < nextHostTimePoint) {
+			DEBUG(cout << "\tcurrent time t=" << t << "; nextHostTime=" << nextHostTimePoint << endl);
+			// get total rate:
+			eventRate = 0.0;
+			availableHosts.clear();
+			for (Node* p : active) {
+				eventRate += p->getBirthRate();
+				eventRate += p->getDeathRate();
+				if (p->getHost()->hasParent()) {
+					eventRate += p->getHostSwitchRate();
+				}
+				availableHosts.insert(p->getHost());	// all the extant hosts
+			}
+			DEBUG(
+				cout << "\tActive set of parasites: { ";
+				for (Node *p : active) {
+					cout << p->getLabel() << ' ';
+				}
+				cout << "}" << endl;
+			);
+			DEBUG(cout << "\tTotal event rate (duplication + host switch + extinction) = " << eventRate << endl);
+			double t_next = -log10(fran()) / eventRate;	// t_next is the amount of time from t to the next parasite event
+			DEBUG(cout << "\tNext event would be at time " << (t+t_next) << endl);
+			std::set<Node*> toActivate;
+			std::set<Node*> toDeactivate;
+			if (t + t_next > nextHostTimePoint) {
+				t = nextHostTimePoint;
+				DEBUG(cout << "\t\tThis is a HOST NODE-driven event at time " << t << endl);
+				// CODIVERGENCE and LINEAGE SORTING
+				for (Node* p: active) {
+					h = p->getHost();
+					if (h->isLeaf()) {
+						continue;
+					}
+					DEBUG(cout << "\t\tp = " << p->getLabel() << "; h = " << h->getLabel() << endl);
+//					DEBUG(cout << "\t\ttime of p = " << t << "; time of host = " << h->getTime() << endl);
+					DEBUG(cout << "\t\tnext node(s): { ");
+					DEBUG(
+						for (Node* x : moment->second) {
+							cout << x->getLabel() << ' ';
+						}
+						cout << '}' << endl;
+					)
+					if (moment->second.count(p)) {	// else could codiverge parasites early!
+						hNodeTimes[t].erase(p);
+						if (p->doesCodiverge()) {
+							DEBUG(cout << "\t\tCODIVERGENCE of " << p->getLabel() << " with its host " << h->getLabel() << endl);
+							p->codivergeWith(h);
+							p->setEvent(codivergence);
+							toDeactivate.insert(p);
+							for (Node* c = p->getFirstChild(); c != nullptr; c = c->getSibling()) {
+								toActivate.insert(c);
+								hNodeTimes[c->getHost()->getTime()].insert(c);
+	//							c->setEvent(codivergence);
+							}
+						} else {
+							Node* nuHost = h->getFirstChild();
+							if (fran() < 0.5) {
+								nuHost = nuHost->getSibling();
+							}
+							p->setEvent(duplication);
+							DEBUG(cout << "\t\tLINEAGE SORTING of " << p->getLabel() << " onto nascent host " << nuHost->getLabel() << endl);
+							p->setHost(nuHost);
+							p->onHostVertex() = true;
+							p->setTime(nuHost->getTime());
+							nuHost->addParasite(p);
+							hNodeTimes[nuHost->getTime()].insert(p);
+						}
+					} else {
+						DEBUG(cout << "\t\tThis p=" << p->getLabel() << " cannot codiverge or lineage sort as its host doesn't have the right time." << endl);
+					}
+				}
+				if (roughlyEqual(t, H->getAge())) {
+					break;
+				}
+			} else {
+				// DUPLICATION, EXTINCTION, and HOST SWITCHING
+				DEBUG(cout << "\t\tThis is an event that is INDEPENDENT of host events" << endl);
+				Node *p = getRandomElement<Node*>(active);
+				double pB = p->getBirthRate();
+				double pS = (p->hasParent()) ? p->getHostSwitchRate() : 0.0;
+				double pX = p->getDeathRate();
+				double pTotal = pB + pS + pX;
+				double ran = dran(pTotal);
+				t += t_next;	// advance the current time
+				if (ran < pB) {	// DUPLICATION
+					h = p->getHost();
+					DEBUG(cout << "\t\tDUPLICATION of " << p->getLabel() << " on its host " << h->getLabel() << endl);
+					p->bifurcate();
+					p->setTime(t);
+					p->setEvent(duplication);
+					toDeactivate.insert(p);	//active.erase(p);
+					for (Node* c = p->getFirstChild(); c != nullptr; c = c->getSibling()) {
+						toActivate.insert(c);	//active.insert(c);
+	//					c->setEvent(duplication);
+						c->setHost(h);
+						c->setTime(t);
+						hNodeTimes[h->getTime()].insert(c);
+					}
+					hNodeTimes[h->getTime()].erase(p);
+				} else if (ran < pB + pS) {	// HOST SWITCH
+					h = p->getHost();
+					availableHosts.erase(h);
+					if (availableHosts.size() == 0) {
+						throw new app_exception("Cannot do a host switch, as there are no available host lineages!");
+					}
+					p->bifurcate();
+					p->setTime(t);
+					toDeactivate.insert(p);	//active.erase(p);
+					Node* c  = p->getFirstChild();
+	//				c->setEvent(duplication);
+					toActivate.insert(c);	//active.insert(c);
+					c->setHost(h);
+					c->setTime(h->getTime());
+					hNodeTimes[h->getTime()].insert(c);
+					DEBUG(cout << "\t\t(duplication+) HOST SWITCH of " << p->getLabel() << " on its host " << h->getLabel()
+							<< ", with " << c->getLabel() << " staying on host " << h->getLabel() << " and ");
+					c = c->getSibling();
+	//				c->setEvent(hostswitch);
+					toActivate.insert(c);	//active.insert(c);
+					Node *nuHost = getRandomElement<Node*>(availableHosts);
+					c->setHost(nuHost);
+					c->setTime(nuHost->getTime());
+					hNodeTimes[nuHost->getTime()].insert(c);
+					hNodeTimes[h->getTime()].erase(p);
+					DEBUG(cout << c->getLabel() << " jumping to host " << nuHost->getLabel() << endl);
+				} else { 	// DEATH
+					p->setTime(t);
+	//				p->setEvent(death);
+					toDeactivate.insert(p);	//active.erase(p);
+					hNodeTimes[h->getTime()].erase(p);
+					DEBUG(cout << "\t\tDEATH of " << p->getLabel() << " on its host " << h->getLabel() << endl);
+				}
+			}
+			DEBUG(cout << *this);
+			for (Node* kill : toDeactivate) {
+				active.erase(kill);
+			}
+			for (Node* act : toActivate) {
+				active.insert(act);
+			}
+		}
 	}
 }
 
@@ -507,9 +711,10 @@ Node* Cophylogeny::createParasiteRoot(Node* h, bool _onVertex) {
 	p->setHost(h);
 	h->addParasite(p);
 	p->onHostVertex() = _onVertex;
-	if (_onVertex) {
-		pNodeAtTime[h->getTime()].insert(p);
-	}
+	occupantsAtTime[h->getTime()].insert(p);
+//	if (_onVertex) {
+//		occupantsAtTime[h->getTime()].insert(p);
+//	}
 	PTrees.insert(P);
 	DEBUG(cout << "Tree P with address " << P << " has been added to the cophylogeny" << endl);
 	return p;
@@ -530,8 +735,8 @@ Node* Cophylogeny::createParasiteRoot(Node *h, double beforeBy) {
 //	p->setFirstChild(q);
 //	q->setHost(h);
 //	q->onHostVertex() = false;
-	pNodeAtTime[t].insert(p);
-//	pNodeAtTime[h->getTime()].insert(q);	// XXX needs much testing!
+	occupantsAtTime[t].insert(p);
+//	occupantsAtTime[h->getTime()].insert(q);	// XXX needs much testing!
 	return p;
 }
 
@@ -598,11 +803,12 @@ void Cophylogeny::storeAssociationInfo() {
 				str = as.first + ":" + p->getHost()->getLabel();
 			} else {
 				str = as.first + ":[";
-				if (p->onHostVertex()) {
-					str += eventSymbol[codivergence];
-				} else {
-					str += eventSymbol[duplication];
-				}
+				str += eventSymbol[p->getEvent()];
+//				if (p->onHostVertex()) {
+//					str += eventSymbol[codivergence];
+//				} else {
+//					str += eventSymbol[duplication];
+//				}
 				str += "]" + p->getHost()->getLabel();
 			}
 			DEBUG(cout << "info on " << p->getLabel() << ": " << str << endl);

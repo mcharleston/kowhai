@@ -91,6 +91,12 @@ void Tree::calcAncestry() {
 	}
 }
 
+void Tree::calcAge() {
+	double t_min = root->getTime();
+	double t_max = root->getMaxDescendantTime();
+	treeAge = t_max - t_min;
+}
+
 const int kMediumStringLength = 65536;
 char treebuf[kMediumStringLength];	// XXX magic number
 
@@ -458,6 +464,11 @@ void Tree::putInternalVertices(std::set<Node*>& IV) {
 			IV.insert(v.second);
 		}
 	}
+}
+
+void Tree::scaleTo(double d) {
+	calcAge();
+	root->scaleBy(d / treeAge);
 }
 
 void Tree::setNodeLabel(const std::string& str, const std::string& newlabel) {
