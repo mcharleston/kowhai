@@ -54,31 +54,46 @@ void testCoevolveBirthModel() {
 }
 
 void testCoevolve() {
-	cout << hline << "TESTING cleverCoevolve" << endl << hline;
+	cout << hline << "TESTING Coevolve" << endl << hline;
 	Node* h = new Node();
 	Tree H(h);
 	H.growYule(10);
 	H.scaleTo(1.0);
 	Cophylogeny C;
 	C.setHostTree(&H);
-	Node *p = C.createParasiteRoot(H.getRoot(), true);
+	Node *p = C.createParasiteRoot(H.getRoot(), 0.2);
+
+	// This failed,but I'd like to be able to do something like grow a tree P
+	// by duplicating a while then putting all its leaves on the root of H:
+//	h = p->getHost();
+//	p->bifurcate();
+//	double t(-0.1);
+//	p->setTime(t);
+//	p->setEvent(duplication);
+//	for (Node* c = p->getFirstChild(); c != nullptr; c = c->getSibling()) {
+//		c->setHost(h);
+//		c->setTime(t);
+//	}
+
 	Tree *P = p->getTree();
-	P->setCodivergenceProbability(0.6);
+	P->setCodivergenceProbability(0.7);
 	P->setBirthRate(0.6);
-	P->setDeathRate(0.1);
-	P->setHostSwitchRate(0.5);
+	P->setDeathRate(0.0);
+	P->setHostSwitchRate(0.0);
 	P->calculateHeights();
 	P->setShowInfo(true);
 	P->setLabel("P");
-//	Node* q = C.createParasiteRoot(H.getRoot(), true);
-//	Tree *Q = q->getTree();
-//	Q->setCodivergenceProbability(1.0);
-//	Q->setBirthRate(1.0);
-//	Q->setDeathRate(0.0);
-//	Q->setHostSwitchRate(0.0);
-//	Q->calculateHeights();
-//	Q->setShowInfo(true);
-//	Q->setLabel("Q");
+
+	Node* q = C.createParasiteRoot(H.getRoot(), 0.2);
+	Tree *Q = q->getTree();
+	Q->setCodivergenceProbability(1.0);
+	Q->setBirthRate(1.0);
+	Q->setDeathRate(0.0);
+	Q->setHostSwitchRate(0.0);
+	Q->calculateHeights();
+	Q->setShowInfo(true);
+	Q->setLabel("Q");
+
 	C.coevolve();
 	C.storeAssociationInfo();
 	cout << C;

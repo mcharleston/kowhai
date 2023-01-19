@@ -500,20 +500,37 @@ void Cophylogeny::coevolve()
 {
 	// new try
 	bool _debugging(true);
+	bool _hostDictatesRate(true);
 	set<Node*> active;
 	double t_0(H->getAge());	// max possible time of anything in the Host tree
 	// Find first "active" Parasite nodes: those that can do anything
 	Tree* P = *(PTrees.begin());
-	active.insert(P->getRoot());
+//	active.insert(P->getRoot());
+	double firstEventTime(t_0);
+	/*
+	 * ==================[t_0]
+	 *    +--------------* Tree P1
+	 *    \-----+----+---*
+	 *          |    \---*
+	 *          \----+---*
+	 *               \---*
+	 *    +--------------* Tree P2
+	 *    \--------------*
+	 *    ^t_min
+	 */
+	map<double, set<Node*>> hNodeTimes;
 	for (Tree* P : PTrees) {
 		Node* r = P->getRoot();
-		if (r->getTime() < t_0) {
-			t_0 = r->getTime();
+		double time = r->getTime();
+		DEBUG(cout << "Time of parasite root " << r->getLabel() << " = " << time << endl);
+		if (time < firstEventTime) {
+			firstEventTime = time;
 			active.clear();
 			active.insert(r);
-		} else if (r->getTime() == t_0) {
+		} else if (time == firstEventTime) {
 			active.insert(r);
 		}
+		hNodeTimes[time].insert(r);
 	}
 	DEBUG(cout << "COEVOLVE" << endl);
 	DEBUG(
@@ -523,19 +540,24 @@ void Cophylogeny::coevolve()
 		}
 		cout << "}" << endl;
 	);
-	double t_final = H->getAge();	// this is a time from 0 to the present
 	Node* h;
-	map<double, set<Node*>> hNodeTimes;
 	H->getRoot()->storeNodeTimes(hNodeTimes);
 	DEBUG(
 		for (auto pr : hNodeTimes) {
 			cout << pr.first << endl;
 		}
 	);
-	hNodeTimes[t_0].insert(active.begin(), active.end());
+	hNodeTimes[firstEventTime].insert(active.begin(), active.end());
 	double eventRate;
+	double hitchDuplicationProb(0.5);	// XXX magic number for parametrising later
 	set<Node*> availableHosts;
-	double t(t_0);
+	unsigned int numCodivergences(0);
+	unsigned int numDuplications(0);
+	unsigned int numExtinctions(0);
+	unsigned int numHostSwitches(0);
+	unsigned int numJointDuplicationEvents(0);
+	unsigned int numLineageSortingEvents(0);
+	double t(firstEventTime);
 	approx roughlyEqual(0.000001);	// functor to return true iff input numbers are within this tolerance of each other.
 	for (map<double, set<Node*>>::iterator moment = hNodeTimes.begin(); moment != hNodeTimes.end(); ++moment) {
 		auto nextMoment = moment;
@@ -547,13 +569,25 @@ void Cophylogeny::coevolve()
 			// get total rate:
 			eventRate = 0.0;
 			availableHosts.clear();
-			for (Node* p : active) {
+			if (_hostDictatesRate) {
+				Node* p = *(active.begin());
 				eventRate += p->getBirthRate();
 				eventRate += p->getDeathRate();
 				if (p->getHost()->hasParent()) {
 					eventRate += p->getHostSwitchRate();
 				}
-				availableHosts.insert(p->getHost());	// all the extant hosts
+				for (Node* p : active) {
+					availableHosts.insert(p->getHost());	// all the extant hosts
+				}
+			} else {
+				for (Node* p : active) {
+					eventRate += p->getBirthRate();
+					eventRate += p->getDeathRate();
+					if (p->getHost()->hasParent()) {
+						eventRate += p->getHostSwitchRate();
+					}
+					availableHosts.insert(p->getHost());	// all the extant hosts
+				}
 			}
 			DEBUG(
 				cout << "\tActive set of parasites: { ";
@@ -597,6 +631,7 @@ void Cophylogeny::coevolve()
 								hNodeTimes[c->getHost()->getTime()].insert(c);
 	//							c->setEvent(codivergence);
 							}
+							++numCodivergences;
 						} else {
 							Node* nuHost = h->getFirstChild();
 							if (fran() < 0.5) {
@@ -609,6 +644,7 @@ void Cophylogeny::coevolve()
 							p->setTime(nuHost->getTime());
 							nuHost->addParasite(p);
 							hNodeTimes[nuHost->getTime()].insert(p);
+							++numLineageSortingEvents;
 						}
 					} else {
 						DEBUG(cout << "\t\tThis p=" << p->getLabel() << " cannot codiverge or lineage sort as its host doesn't have the right time." << endl);
@@ -642,6 +678,31 @@ void Cophylogeny::coevolve()
 						hNodeTimes[h->getTime()].insert(c);
 					}
 					hNodeTimes[h->getTime()].erase(p);
+					++numDuplications;
+					// Now do "hitch-hiking" type duplication events, currently selected at uniform random:
+					bool _jointEvent(false);
+					for (Node* q : active) {
+						if (p == q || (q->getHost() != h)) {
+							continue;
+						}
+						if (dran() < hitchDuplicationProb) {
+							_jointEvent = true;
+							q->bifurcate();
+							q->setTime(t);
+							q->setEvent(duplication);
+							toDeactivate.insert(q);	//active.erase(p);
+							for (Node* c = q->getFirstChild(); c != nullptr; c = c->getSibling()) {
+								toActivate.insert(c);	//active.insert(c);
+			//					c->setEvent(duplication);
+								c->setHost(h);
+								c->setTime(t);
+								hNodeTimes[h->getTime()].insert(c);
+							}
+							hNodeTimes[h->getTime()].erase(q);
+							++numDuplications;
+						}
+					}
+					numJointDuplicationEvents += (_jointEvent) ? 1 : 0 ;
 				} else if (ran < pB + pS) {	// HOST SWITCH
 					h = p->getHost();
 					availableHosts.erase(h);
@@ -667,12 +728,14 @@ void Cophylogeny::coevolve()
 					c->setTime(nuHost->getTime());
 					hNodeTimes[nuHost->getTime()].insert(c);
 					hNodeTimes[h->getTime()].erase(p);
+					++numHostSwitches;
 					DEBUG(cout << c->getLabel() << " jumping to host " << nuHost->getLabel() << endl);
 				} else { 	// DEATH
 					p->setTime(t);
 	//				p->setEvent(death);
 					toDeactivate.insert(p);	//active.erase(p);
 					hNodeTimes[h->getTime()].erase(p);
+					++numExtinctions;
 					DEBUG(cout << "\t\tDEATH of " << p->getLabel() << " on its host " << h->getLabel() << endl);
 				}
 			}
@@ -685,6 +748,12 @@ void Cophylogeny::coevolve()
 			}
 		}
 	}
+	cout << "numCodivergences = " << numCodivergences << endl;
+	cout << "numDuplication Events = " << numDuplications << endl;
+	cout << "numExtinctions = " << numExtinctions << endl;
+	cout << "numHostSwitches = " << numHostSwitches << endl;
+	cout << "numLineageSortingEvents = " << numLineageSortingEvents << endl;
+	cout << "numJointDuplicationEvents = " << numJointDuplicationEvents << endl;
 }
 
 Node* Cophylogeny::createParasiteRoot(Node* h, bool _onVertex) {
