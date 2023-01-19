@@ -79,7 +79,7 @@ void testCoevolve() {
 //	Q->calculateHeights();
 //	Q->setShowInfo(true);
 //	Q->setLabel("Q");
-	C.cospec();
+	C.coevolve();
 	C.storeAssociationInfo();
 	cout << C;
 	cout << "Output for segdup:" << endl;
@@ -103,7 +103,7 @@ void testHostSwitching() {
 	P->calculateHeights();
 	P->setShowInfo(true);
 	P->setLabel("P");
-	C.correctCoevolve();
+	C.coevolve();
 	C.storeAssociationInfo();
 	cout << C;
 	cout << "Output for segdup:" << endl;
@@ -162,6 +162,7 @@ int main(int argn, char** argc) {
 			Node* h = new Node();
 			Tree H(h);
 			H.growYule(numHosts);
+			H.scaleTo(1.0);
 			Cophylogeny C;
 			C.setHostTree(&H);
 			for (int a(0); a < numParasiteTrees; ++a) {

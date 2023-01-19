@@ -28,9 +28,9 @@ public:
 	virtual ~Cophylogeny() {}
 
 	void coevolve();
-	void cleverCoevolve();
-	void correctCoevolve();
-	void cospec();
+//	void cleverCoevolve();
+//	void correctCoevolve();
+//	void cospec();
 
 	Node* createParasiteRoot(Node *h, bool _onVertex);
 	Node* createParasiteRoot(Node *h, double beforeTime);
