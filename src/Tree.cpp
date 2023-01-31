@@ -308,6 +308,7 @@ void Tree::growYule(int targetNumLeaves) {
 	L.push_back(root);
 	int numLeaves = L.size();
 	double divTime = 0;
+	double birthRate(1.0);
 	treeAge = 0;
 	while (numLeaves < targetNumLeaves) {
 		// Choose a leaf at random:

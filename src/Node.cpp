@@ -156,9 +156,17 @@ void Node::codivergeWith(Node* h) {
 	}
 }
 
+extern bool _hostDictatesRate;
+extern double codivProb;
+
 bool Node::doesCodiverge() {
 	bool _debugging(true);
-	double prob = T->getCodivergenceProbability();
+	double prob;
+	if (_hostDictatesRate) {
+		prob = codivProb;
+	} else {
+		prob = T->getCodivergenceProbability();
+	}
 	double r(fran());
 	DEBUG(cout << "Codivergence probability: " << prob << "; r = " << r << endl);
 	return (r < prob);
