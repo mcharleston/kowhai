@@ -10,6 +10,8 @@
 #include <iomanip>
 #include <string>
 
+#include "../utility/debugging.h"
+
 #include "Tree.h"
 #include "Cophylogeny.h"
 
@@ -185,41 +187,41 @@ int main(int argn, char** argc) {
 			if (!strcmp(argc[i], "-nH")) {
 				++i;
 				numHosts = atoi(argc[i]);
-				cout << "Setting number of host SPECIES to simulate as " << numHosts << endl;
+				DEBUG(cout << "Setting number of host SPECIES to simulate as " << numHosts << endl);
 			} else if (!strcmp(argc[i], "-nP")) {
 				++i;
 				numParasiteTrees = atoi(argc[i]);
-				cout << "Setting number of parasite TREES to simulate as " << numParasiteTrees << endl;
+				DEBUG(cout << "Setting number of parasite TREES to simulate as " << numParasiteTrees << endl);
 			} else if (!strcmp(argc[i], "-nR")) {
 				++i;
 				numSamples = atoi(argc[i]);
-				cout << "Setting number of samples as " << numSamples << endl;
+				DEBUG(cout << "Setting number of samples as " << numSamples << endl);
 			} else if (!strcmp(argc[i], "-pC")) {
 				++i;
 				codivProb = atof(argc[i]);
-				cout << "Setting codivergence probability as " << codivProb << endl;
+				DEBUG(cout << "Setting codivergence probability as " << codivProb << endl);
 			} else if (!strcmp(argc[i], "-pJ")) {
 				++i;
 				jointDuplicationProb = atof(argc[i]);
-				cout << "Setting joint duplication probability switch rate as " << jointDuplicationProb << endl;
+				DEBUG(cout << "Setting joint duplication probability switch rate as " << jointDuplicationProb << endl);
 			} else if (!strcmp(argc[i], "-rB")) {
 				++i;
 				birthRate = atof(argc[i]);
-				cout << "Setting birth/duplication rate as " << birthRate << endl;
+				DEBUG(cout << "Setting birth/duplication rate as " << birthRate << endl);
 			} else if (!strcmp(argc[i], "-rHS")) {
 				++i;
 				hostSwitchRate = atof(argc[i]);
-				cout << "Setting host switch rate as " << hostSwitchRate << endl;
+				DEBUG(cout << "Setting host switch rate as " << hostSwitchRate << endl);
 			} else if (!strcmp(argc[i], "-rX")) {
 				++i;
 				deathRate = atof(argc[i]);
-				cout << "Setting death rate as " << deathRate << endl;
+				DEBUG(cout << "Setting death rate as " << deathRate << endl);
 			} else if (!strcmp(argc[i], "--for-segdup")) {
 				_for_segdup = true;
-				cout << "Output simulated cophylogeny for segdup" << endl;
+				DEBUG(cout << "Output simulated cophylogeny for segdup" << endl);
 			} else if (!strcmp(argc[i], "--host-sets-rate")) {
 				_hostDictatesRate = true;
-				cout << "Duplication rate is set by the host tree, not dependent lineages." << endl;
+				DEBUG(cout << "Duplication rate is set by the host tree, not dependent lineages." << endl);
 			} else if (!strcmp(argc[i], ";")) {
 				break;
 			} else {

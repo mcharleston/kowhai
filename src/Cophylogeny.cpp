@@ -283,15 +283,22 @@ void Cophylogeny::coevolve()
 			}
 		}
 	}
-	cout << "numCodivergences = " << numCodivergences << endl;
-	cout << "numDuplication Events = " << numDuplications << endl;
-	cout << "numExtinctions = " << numExtinctions << endl;
-	cout << "numHostSwitches = " << numHostSwitches << endl;
-	cout << "numLineageSortingEvents = " << numLineageSortingEvents << endl;
-	cout << "numJointDuplicationEvents = " << numJointDuplicationEvents << endl;
-	cout << "dupSize count" << endl;
-	for (auto pr : duplicationSizes) {
-		cout << std::setw(7) << pr.first << ' ' << pr.second << endl;
+	bool _verbose(false);
+	if (_verbose) {
+		cout << "numCodivergences = " << numCodivergences << endl;
+		cout << "numDuplication Events = " << numDuplications << endl;
+		cout << "numExtinctions = " << numExtinctions << endl;
+		cout << "numHostSwitches = " << numHostSwitches << endl;
+		cout << "numLineageSortingEvents = " << numLineageSortingEvents << endl;
+		cout << "numJointDuplicationEvents = " << numJointDuplicationEvents << endl;
+		cout << "dupSize count" << endl;
+		for (auto pr : duplicationSizes) {
+			cout << std::setw(7) << pr.first << ' ' << pr.second << endl;
+		}
+	} else {
+		cout << "nCospec,nDup,nSegDup,nXtinc,nHostSwitch,nLineageSort" << endl;
+		cout << numCodivergences << ',' << numDuplications << ',' << numJointDuplicationEvents
+				<< ',' << numExtinctions << ',' << numHostSwitches << ',' << numLineageSortingEvents << endl;
 	}
 }
 
@@ -369,6 +376,9 @@ void Cophylogeny::outputForSegdup(ostream& os) {
 	H->writeNewick(os);
 	os << "\"";
 	for (auto P : PTrees) {
+		if (P->getRoot()->isLeaf()) {
+			continue;
+		}
 		os << " -G \"";
 		P->writeNewick(os);
 		os << "\" \"";
