@@ -20,6 +20,7 @@
 using namespace std;
 
 extern bool _debugging;
+extern bool _verbose;
 
 namespace kowhai {
 
@@ -36,7 +37,7 @@ void Cophylogeny::coevolve()
 	set<Node*> active;
 	double t_0(H->getAge());	// max possible time of anything in the Host tree
 	// Find first "active" Parasite nodes: those that can do anything
-	Tree* P = *(PTrees.begin());
+//	Tree* P = *(PTrees.begin());
 //	active.insert(P->getRoot());
 	double firstEventTime(t_0);
 	/*
@@ -83,10 +84,11 @@ void Cophylogeny::coevolve()
 	double eventRate;
 	set<Node*> availableHosts;
 	unsigned int numCodivergences(0);
-	unsigned int numDuplications(0);
+	unsigned int numIndividualDuplications(0);
 	unsigned int numExtinctions(0);
 	unsigned int numHostSwitches(0);
-	unsigned int numJointDuplicationEvents(0);
+	unsigned int numDuplicationEvents(0);
+	unsigned int numJointDuplications(0);
 	map<int, int> duplicationSizes;
 	unsigned int numLineageSortingEvents(0);
 	double t(firstEventTime);
@@ -210,7 +212,7 @@ void Cophylogeny::coevolve()
 						hNodeTimes[h->getTime()].insert(c);
 					}
 					hNodeTimes[h->getTime()].erase(p);
-					++numDuplications;
+					++numIndividualDuplications;
 					// Now do "hitch-hiking" type duplication events, currently selected at uniform random:
 					bool _jointEvent(false);
 					int segmentalDupSize(1);
@@ -232,11 +234,12 @@ void Cophylogeny::coevolve()
 								hNodeTimes[h->getTime()].insert(c);
 							}
 							hNodeTimes[h->getTime()].erase(q);
-							++numDuplications;
+							++numIndividualDuplications;
 							++segmentalDupSize;
 						}
 					}
-					numJointDuplicationEvents += (_jointEvent) ? 1 : 0 ;
+					++numDuplicationEvents;
+					numJointDuplications += (_jointEvent) ? 1 : 0 ;
 					duplicationSizes[segmentalDupSize] = duplicationSizes[segmentalDupSize] + 1;
 				} else if (ran < pB + pS) {	// HOST SWITCH
 					h = p->getHost();
@@ -283,21 +286,30 @@ void Cophylogeny::coevolve()
 			}
 		}
 	}
-	bool _verbose(false);
+//	bool _verbose(false);
 	if (_verbose) {
 		cout << "numCodivergences = " << numCodivergences << endl;
-		cout << "numDuplication Events = " << numDuplications << endl;
+		cout << "numIndividualDuplications (per gene lineage) = " << numIndividualDuplications << endl;
 		cout << "numExtinctions = " << numExtinctions << endl;
 		cout << "numHostSwitches = " << numHostSwitches << endl;
 		cout << "numLineageSortingEvents = " << numLineageSortingEvents << endl;
-		cout << "numJointDuplicationEvents = " << numJointDuplicationEvents << endl;
+		cout << "numDuplicationEvents (1 or more lineages duplicate) = " << numDuplicationEvents << endl;
+		cout << "numJointDuplicationEvents (more than one lineage duplicates) = " << numJointDuplications << endl;
 		cout << "dupSize count" << endl;
 		for (auto pr : duplicationSizes) {
 			cout << std::setw(7) << pr.first << ' ' << pr.second << endl;
 		}
 	} else {
-		cout << "nCospec,nDup,nSegDup,nXtinc,nHostSwitch,nLineageSort" << endl;
-		cout << numCodivergences << ',' << numDuplications << ',' << numJointDuplicationEvents
+		int maxJointDuplicationSize(1);
+		double meanDuplicationSize(0.0);
+		for (auto pr : duplicationSizes) {
+			meanDuplicationSize += pr.first * pr.second;
+			maxJointDuplicationSize = max(maxJointDuplicationSize, pr.first);
+		}
+		meanDuplicationSize /= numDuplicationEvents;
+		cout << "nCospec,nDup,nSegDup,maxDupSize,meanDupSize,nXtinc,nHostSwitch,nLineageSort" << endl;
+		cout << numCodivergences << ',' << numIndividualDuplications << ',' << numDuplicationEvents << ','
+				<< maxJointDuplicationSize << ',' << meanDuplicationSize
 				<< ',' << numExtinctions << ',' << numHostSwitches << ',' << numLineageSortingEvents << endl;
 	}
 }

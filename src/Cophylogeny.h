@@ -25,7 +25,7 @@ private:
 	int currentTimeIndex;
 public:
 	Cophylogeny() : H(nullptr), currentTimeIndex(0) {}
-	virtual ~Cophylogeny() {}
+	virtual ~Cophylogeny() { }
 
 	void coevolve();
 //	void cleverCoevolve();

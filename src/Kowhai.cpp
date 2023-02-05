@@ -20,6 +20,8 @@ using namespace kowhai;
 
 bool _debugging(false);
 bool _for_segdup(false);
+bool _verbose(false);
+
 string hline("=================================================================\n");
 //string kowhaiHelp("Kowhai Help");
 
@@ -77,6 +79,8 @@ void testCoevolveBirthModel() {
 	q->getTree()->setCodivergenceProbability(0.8);
 	C.coevolve();
 	cout << C;
+//	delete p->getTree();
+//	delete q->getTree();
 }
 
 void testCoevolve() {
@@ -222,6 +226,9 @@ int main(int argn, char** argc) {
 			} else if (!strcmp(argc[i], "--host-sets-rate")) {
 				_hostDictatesRate = true;
 				DEBUG(cout << "Duplication rate is set by the host tree, not dependent lineages." << endl);
+			} else if (!strcmp(argc[i], "--verbose")) {
+				_verbose = true;
+				DEBUG(cout << "Setting verbose output." << endl);
 			} else if (!strcmp(argc[i], ";")) {
 				break;
 			} else {
