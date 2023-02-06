@@ -307,10 +307,16 @@ void Cophylogeny::coevolve()
 			maxJointDuplicationSize = max(maxJointDuplicationSize, pr.first);
 		}
 		meanDuplicationSize /= numDuplicationEvents;
-		cout << "nCospec,nDup,nSegDup,maxDupSize,meanDupSize,nXtinc,nHostSwitch,nLineageSort" << endl;
-		cout << numCodivergences << ',' << numIndividualDuplications << ',' << numDuplicationEvents << ','
-				<< maxJointDuplicationSize << ',' << meanDuplicationSize
-				<< ',' << numExtinctions << ',' << numHostSwitches << ',' << numLineageSortingEvents << endl;
+		cout << "nCospec,nIndivididualDups,nAllDupEvents,nJointDups,maxDupSize,meanDupSize,nXtinc,nHostSwitch,nLineageSort" << endl;
+		cout << numCodivergences << ','
+				<< numIndividualDuplications << ','
+				<< numDuplicationEvents << ','
+				<< numJointDuplications << ','
+				<< maxJointDuplicationSize << ','
+				<< meanDuplicationSize << ','
+				<< numExtinctions << ','
+				<< numHostSwitches << ','
+				<< numLineageSortingEvents << endl;
 	}
 }
 
