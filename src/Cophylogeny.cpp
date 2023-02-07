@@ -752,8 +752,8 @@ void Cophylogeny::coevolve()
 	cout << "numDuplication Events = " << numDuplications << endl;
 	cout << "numExtinctions = " << numExtinctions << endl;
 	cout << "numHostSwitches = " << numHostSwitches << endl;
-	cout << "numLineageSortingEvents = " << numLineageSortingEvents << endl;
 	cout << "numJointDuplicationEvents = " << numJointDuplicationEvents << endl;
+	cout << "numLineageSortingEvents = " << numLineageSortingEvents << endl;
 }
 
 Node* Cophylogeny::createParasiteRoot(Node* h, bool _onVertex) {
