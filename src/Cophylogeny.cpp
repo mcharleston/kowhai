@@ -7,6 +7,7 @@
 
 #include <cmath>
 #include <map>
+#include <iomanip>
 #include <stdio.h>
 #include <vector>
 
@@ -19,492 +20,24 @@
 using namespace std;
 
 extern bool _debugging;
+extern bool _verbose;
 
 namespace kowhai {
 
-//void Cophylogeny::coevolve() {
-//	/**
-//	 * Use the same process as for growing a Yule tree but with additional actions:
-//	 * 		at each bifurcation of a node in H, call codiverge to see if the parasites also codiverge
-//	 * 		on each edge of H, check for next events:
-//	 * 			any of the associated parasites duplicating, going extinct or host-switching
-//	 * 			another bifurcation on that host edge
-//	 */
-//
-//	bool _debugging(false);
-//	double currentTime(0.0);
-//
-//	// Host tree nodes are sorted in time order from t=0 to t=t_max (the leaves)
-//	Node *h;
-////	int eventIndex(0);
-//	vector<Node*> orderedHostNodes = H->getOrderedNodes();
-//	int i(0);
-//	vector<Node*> remove;
-//	while (currentTime < H->getAge()) {
-//		// collect all parasites on the host nodes extant at this time point
-//		h = orderedHostNodes[i];
-//		DEBUG(cout << "Processing host node " + h->getLabel() << " at time " << h->getTime() << endl);
-//		remove.clear();
-//		if (h->isLeaf()) {
-//			DEBUG(cout << "Reached the leaves: time to stop." << endl);
-//			break;
-//		}
-//		DEBUG(cout << "This host node has " << h->getParasites().size() << " parasites." << endl);
-//		// DUPLICATION, HOST SWITCHING and EXTINCTION:
-//
-//		// CODIVERGENCE and MISSING THE BOAT:
-//		for (Node* p : h->getParasites()) {
-//			if (p->onHostVertex()) {
-//				if (p->doesCodiverge()) {
-//					DEBUG(cout << p->getLabel() << " codiverges with this host" << endl);
-//					p->codivergeWith(h);
-//					p->getFirstChild()->onHostVertex() = true;
-//					p->getFirstChild()->getSibling()->onHostVertex() = true;
-//				} else {
-//					// select one nascent host lineage at uniform random:
-//					Node* nuHost = h->getFirstChild();
-//					if (fran() < 0.5) {
-//						nuHost = nuHost->getSibling();
-//					}
-//					DEBUG(cout << p->getLabel() << " misses the boat and goes down new host lineage " << nuHost->getLabel() << endl);
-//					// put p on it & note it for removal from this host node (h):
-//					p->setHost(nuHost);
-//					p->onHostVertex() = true;
-//					nuHost->addParasite(p);
-//					remove.push_back(p);
-//				}
-//			}
-//		}
-//		for (Node* p : remove) {
-//			h->getParasites().erase(p);
-//		}
-//		++i;
-//	}
-//	// Store the association information in the parasite tree(s):
-//	storeAssociationInfo();
-//}
-//
-//void Cophylogeny::cleverCoevolve() {
-//	bool _debugging(true);
-////	DEBUG(
-////			for (auto pr : H->getVertices()) {
-////				Node* h = pr.second;
-////				cout << "\ttime of vertex " << h->getLabel() << " is " << h->getTime() << endl;
-////			}
-////			cout << (*H)
-////	);
-//	double t = occupantsAtTime.begin()->first;	// the first event in time since map is *ordered*
-//	DEBUG(cout << "First event at time t = " << t << endl);
-//	double t_final = H->getAge();	// this is a time from 0 to the present
-//	DEBUG(cout << "Last event at time t = " << t_final << endl);
-//	double eventRate;
-//	vector<Node*> parasToRemove;
-//	set<Node*> availableHosts;
-//	DEBUG(cout << "HOST TREE:" << endl << *H);
-//	for (std::map<double, std::set<Node*> >::iterator moment = occupantsAtTime.begin();
-//			moment != occupantsAtTime.end(); ++moment) {// currentPs : pNodeAtTime) {
-//		double t_final = H->getAge();	// this is a time from 0 to the present
-//		DEBUG(cout << "Time point: " << moment->first << endl);
-//		DEBUG(
-//				cout << "Nodes by time:" << endl;
-//				for (auto pr : occupantsAtTime) {
-//					cout << "\t" << pr.first << ": { ";
-//					for (Node* p : pr.second) {
-//						cout << p->getLabel() << " ";
-//					}
-//					cout <<"}" << endl;
-//				}
-//		);
-////		DEBUG(cout << "|pNodeAtTime| = " << pNodeAtTime.size() << endl);
-//		set<Node*> occupants = moment->second;
-////		set<Node*> occupants = currentPs.second;
-//		DEBUG(
-//				cout << "Occupants at this point: {";
-//				for (Node* p : occupants) {
-//					cout << " " << p->getLabel();
-//				}
-//				cout << " }" << endl;
-//		);
-//		Node* n = *(occupants.begin());
-//		Node* h = n->getHost();
-//		set<Node*> nuNodes;
-//		if (n->onHostVertex()) {
-//			if (h->isLeaf()) {
-//				continue;
-//			}
-//			// CODIVERGENCE or LINEAGE SORTING
-//			DEBUG(cout << "This is on the host vertex " << h->getLabel() << endl);
-//			double nextHostEventTime(t_final + 1.0);
-//			// do codivergence and lineage sorting
-//			for (Node* p : occupants) {
-//				if (p->doesCodiverge()) {
-//					DEBUG(cout << p->getLabel() << " codiverges with this host" << endl);
-//					p->codivergeWith(h);
-//					for (Node *c = p->getFirstChild(); c != nullptr; c = c->getSibling()) {
-//						c->onHostVertex() = true;
-//						nuNodes.insert(c);
-//						c->setTime(c->getHost()->getTime());
-//						nextHostEventTime = min(nextHostEventTime, c->getTime());
-//						DEBUG(cout << "\t" << c->getLabel() <<":" << c->getHost()->getLabel() << "; t=" << c->getTime() << endl);
-//					}
-//				} else {
-//					// select one nascent host lineage at uniform random:
-//					Node* nuHost = h->getFirstChild();
-//					if (fran() < 0.5) {
-//						nuHost = nuHost->getSibling();
-//					}
-//					DEBUG(cout << p->getLabel() << " misses the boat and goes down new host lineage " << nuHost->getLabel() << endl);
-//					// put p on it & note it for removal from this host node (h):
-//					p->setHost(nuHost);
-//					p->onHostVertex() = true;
-//					nuHost->addParasite(p);
-//					nuNodes.insert(p);
-//					nextHostEventTime = min(nextHostEventTime, nuHost->getTime());
-//				}
-//			}
-//			for (Node* nu : nuNodes) {
-//				occupantsAtTime[nu->getHost()->getTime()].insert(nu);
-//			}
-//			t = nextHostEventTime;
-////			for (Node* q : parasToRemove) {
-////				h->getParasites().erase(q);	// may not need to do this.
-////			}
-//		} else {
-//			DEBUG(cout << "This is on the edge above " << h->getLabel() << endl);
-//			// check all active parasite nodes for other events
-//			eventRate = 0.0;
-//			availableHosts.clear();
-//			double nextHostEventTime(0.0); // TODO This is going to always put the next time to 0!!!
-//			for (Node* p : occupants) {
-//				eventRate += p->getBirthRate();
-//				eventRate += p->getDeathRate();
-//				if (p->getHost()->hasParent()) {
-//					eventRate += p->getHostSwitchRate();
-//				}
-//				nextHostEventTime = min(nextHostEventTime, p->getHost()->getTime());
-//				availableHosts.insert(p->getHost());	// all the extant hosts
-//			}
-//			DEBUG(cout << "Time of next host node = " << nextHostEventTime << endl);
-//			DEBUG(cout << "Total event rate = " << eventRate << endl);
-//			double t_next = -log10(fran()) / eventRate;
-//			DEBUG(cout << "Next event is at time " << (t+t_next) << endl);
-//			if (t + t_next > nextHostEventTime) {
-//				DEBUG(cout << "Setting to the next time point, being a host node" << endl);
-//				throw new app_exception("There is more to do here: because the next event time is after the next host node, I need to set up for codivergence events next.");
-//				t = nextHostEventTime;
-//				continue;	// no more events before the next host node
-//			}
-//			t += t_next;	// advance the current time
-//			DEBUG(cout << "Selecting the eventful lineage: ");
-//			// now select which node is going to do something:
-//			Node *q = getRandomElement<Node*>(occupants);
-//			DEBUG(cout << q->getLabel() << endl);
-//			// which event? :
-//			double pB = q->getBirthRate();
-//			double pS = (q->hasParent()) ? q->getHostSwitchRate() : 0.0;
-//			double pX = q->getDeathRate();
-//			double pTotal = pB + pS + pX;
-//			double ran = dran(pTotal);
-////			pNodeAtTime[t].erase(q);	// this p-node won't be available for any more events at this time // XXX probably unnecessary to remove this
-//			if (ran < pB) {
-//				// DUPLICATION
-//				/*
-//				 *  	bifurcate p
-//				 *  	take this p off h and replace it with its two children
-//				 *  	add these two child ps to pNodeAtTime with the new time
-//				 */
-//				DEBUG(cout << "DUPLICATION event:" << endl);
-//				h = q->getHost();
-//				Tree* T = q->getTree();
-//				DEBUG(
-//						cout << "Tree before:" << endl << *T << endl;
-//				);
-//				q->bifurcate();
-//				DEBUG(
-//						cout << "Tree AFTER:" << endl << *T << endl;
-//				);
-//				q->setEvent(duplication);
-//				q->setTime(t);
-//				q->onHostVertex() = false;
-//				h->getParasites().erase(q);
-//				DEBUG(cout << "Checking children of newly duplicated " << q->getLabel() << endl);
-//				for (Node * c = q->getFirstChild(); c != nullptr; c = c->getSibling()) {
-//					c->setHost(h);
-//					h->getParasites().insert(c);
-//					c->setTime(t);
-//					c->onHostVertex() = false;
-//					occupantsAtTime[t].insert(c);	// now the edges descendant from q are available for events at the next timestep
-//					DEBUG(cout << "New parasite node " << c->getLabel() << " on host " << h->getLabel() << " at time " << t << endl);
-//					DEBUG(cout << "\t which has parent " << q->getLabel() << endl);
-//				}
-//				DEBUG(cout << "First child of parasite node " << q->getLabel() << " is " << q->getFirstChild()->getLabel() << endl);
-//			} else if (ran < pB + pS) {
-//				// HOST SWITCH
-//				DEBUG(cout << "HOST SWITCH event:" << endl);
-//				h = q->getHost();
-//				availableHosts.erase(h);
-//				if (availableHosts.size() == 0) {
-//					throw new app_exception("Cannot do a host switch, as there are no available host lineages!");
-//				}
-//				q->bifurcate();
-//				q->setEvent(duplication);
-//				q->setTime(t);
-//				q->onHostVertex() = false;
-//				h->getParasites().erase(q);
-//				Node *c = q->getFirstChild();
-//				c->setHost(h);
-//				h->getParasites().insert(c);
-//				c->setTime(t);
-//				c->onHostVertex() = false;
-//				occupantsAtTime[t].insert(c);
-//				c = c->getSibling();
-//				Node *nuhost = getRandomElement<Node*>(availableHosts);
-//				c->setHost(nuhost);
-//				nuhost->getParasites().insert(c);
-//				c->setTime(t);
-//				c->onHostVertex() = false;
-//				occupantsAtTime[t].insert(c);
-//			} else {
-//				// DEATH
-//				DEBUG(cout << "EXTINCTION (LOSS) event:" << endl);
-//				q->setTime(t);
-//				q->onHostVertex() = false;
-//				q->setEvent(death);
-//				h->getParasites().erase(q);
-//			}
-////			DEBUG(cout << *this);
-////			DEBUG(q->getTree()->gatherVertices());
-////			DEBUG(q->getTree()->gatherLeaves());
-//			DEBUG(cout << "|pNodeAtTime| = " << occupantsAtTime.size() << endl);
-//		}
-//		DEBUG(cout << *this);
-////		if (t >= t_final) {
-////			DEBUG(cout << "This is at or beyond the age of the host tree so coevolution is stopping." << endl);
-////			break;
-////		}
-//	}
-//}
-//
-//void Cophylogeny::correctCoevolve() {
-//	bool _debugging(true);
-//	DEBUG(
-//			for (auto pr : H->getVertices()) {
-//				Node* h = pr.second;
-//				cout << "\ttime of vertex " << h->getLabel() << " is " << h->getTime() << endl;
-//			}
-//			cout << (*H)
-//	);
-//	double t = occupantsAtTime.begin()->first;	// the first event in time since map is *ordered*
-//	H->initialiseOccupants(occupantsAtTime);
-//	DEBUG(cout << "First event at time t = " << t << endl);
-//	double t_final = H->getAge();	// this is a time from 0 to the present
-//	DEBUG(cout << "Last event at time t = " << t_final << endl);
-//	double eventRate;
-//	vector<Node*> parasToRemove;
-//	set<Node*> availableHosts;
-//	map<double, set<Node*>> hNodeTimes;
-//	H->getRoot()->storeNodeTimes(hNodeTimes);
-//	auto currentHosts = hNodeTimes.begin();
-//	auto lastHostNodes = hNodeTimes.end();
-//	double t_max = lastHostNodes->first;	// this is the time of the last host node.
-////	Node* nextHost = hNodes.begin().second.begin();
-//	DEBUG(cout << "HOST TREE:" << endl << *H);
-//	set<Node*> nuNodes;
-//	cout << "|pNodes| = " << occupantsAtTime.size() << endl;
-//	for (std::map<double, std::set<Node*> >::iterator moment = occupantsAtTime.begin();
-//			moment != occupantsAtTime.end(); ++moment) {
-//		cout << "t=" << moment->first << "\t; pNodes={";
-//		for (Node* p : moment->second) {
-//			cout << " " << p->getLabel();
-//		}
-//		cout << " }" << endl;
-//	}
-//	for (std::map<double, std::set<Node*> >::iterator moment = occupantsAtTime.begin();
-//			moment != occupantsAtTime.end(); ++moment) {
-//
-//		auto nextMoment = moment;
-//		++nextMoment;	// need the *next* moment in time
-//		double nextHostTimePoint = nextMoment->first;
-//		set<Node*>& occupants = moment->second;
-//		while (t < nextHostTimePoint) {
-//			DEBUG(
-//					cout << "Occupants at this point: {";
-//					for (Node* p : occupants) {
-//						cout << " " << p->getLabel();
-//					}
-//					cout << " }" << endl;
-//			);
-//			Node* n = *(occupants.begin());
-//			Node* h = n->getHost();
-//			DEBUG(cout << "This is on the edge above " << h->getLabel() << endl);
-//			// check all active parasite nodes for other events
-//			eventRate = 0.0;
-//			availableHosts.clear();
-//			for (Node* p : occupants) {
-//				eventRate += p->getBirthRate();
-//				eventRate += p->getDeathRate();
-//				if (p->getHost()->hasParent()) {
-//					eventRate += p->getHostSwitchRate();
-//				}
-//				availableHosts.insert(p->getHost());	// all the extant hosts
-//			}
-//			DEBUG(cout << "Time of next host node = " << nextHostTimePoint << endl);
-//			DEBUG(cout << "Total event rate = " << eventRate << endl);
-//			double t_next = -log10(fran()) / eventRate;	// t_next is the amount of time from t to the next parasite event
-//			DEBUG(cout << "Next event is at time " << (t+t_next) << endl);
-//			if (t + t_next > nextHostTimePoint) {
-//				// do the codivergence / lineage sorting here
-//				// CODIVERGENCE or LINEAGE SORTING
-//				DEBUG(cout << "This is on the host vertex " << h->getLabel() << endl);
-//				double nextHostEventTime(t_final + 1.0);
-//				// do codivergence and lineage sorting
-//				for (Node* p : occupants) {
-//					if (p->doesCodiverge()) {
-//						DEBUG(cout << p->getLabel() << " codiverges with this host" << endl);
-//						p->codivergeWith(h);
-//						for (Node *c = p->getFirstChild(); c != nullptr; c = c->getSibling()) {
-//							c->onHostVertex() = true;
-//							nuNodes.insert(c);
-//							c->setTime(c->getHost()->getTime());
-//							occupantsAtTime[c->getTime()].insert(c);
-//							nextHostEventTime = min(nextHostEventTime, c->getTime());
-//							DEBUG(cout << "\t" << c->getLabel() <<":" << c->getHost()->getLabel() << "; t=" << c->getTime() << endl);
-//						}
-//					} else {
-//						// select one nascent host lineage at uniform random:
-//						Node* nuHost = h->getFirstChild();
-//						if (fran() < 0.5) {
-//							nuHost = nuHost->getSibling();
-//						}
-//						DEBUG(cout << p->getLabel() << " misses the boat and goes down new host lineage " << nuHost->getLabel() << endl);
-//						// put p on it & note it for removal from this host node (h):
-//						p->setHost(nuHost);
-//						p->onHostVertex() = true;
-//						nuHost->addParasite(p);
-//						occupantsAtTime[nuHost->getTime()].insert(p);
-//						nuNodes.insert(p);
-//						nextHostEventTime = min(nextHostEventTime, nuHost->getTime());
-//					}
-//				}
-//				for (Node* nu : nuNodes) {
-//					occupantsAtTime[nu->getHost()->getTime()].insert(nu);
-//				}
-//				t = nextHostEventTime;
-//				DEBUG(cout << "Setting to the next time point, being a host node" << endl);
-//				t = nextHostTimePoint;
-//				if (currentHosts == hNodeTimes.end()) {
-//					break;
-//				}
-//				++currentHosts;
-//				continue;	// no more *host* events before the next host node
-//			} else {
-//				// choose an extant parasite lineage and do the events on that
-//				DEBUG(cout << "Selecting the eventful lineage: ");
-//				// now select which node is going to do something:
-//				Node *q = getRandomElement<Node*>(occupants);
-//				DEBUG(cout << q->getLabel() << endl);
-//				// which event? :
-//				double pB = q->getBirthRate();
-//				double pS = (q->hasParent()) ? q->getHostSwitchRate() : 0.0;
-//				double pX = q->getDeathRate();
-//				double pTotal = pB + pS + pX;
-//				double ran = dran(pTotal);
-//				t += t_next;	// advance the current time
-//	//			pNodeAtTime[t].erase(q);	// this p-node won't be available for any more events at this time // XXX probably unnecessary to remove this
-//				if (ran < pB) {	// DUPLICATION
-//					/*
-//					 *  	bifurcate p
-//					 *  	take this p off h and replace it with its two children
-//					 *  	add these two child ps to occupantsAtTime with the new time
-//					 */
-//					DEBUG(cout << "DUPLICATION event:" << endl);
-//					h = q->getHost();
-//					Tree* T = q->getTree();
-//					DEBUG(
-//							cout << "Tree before:" << endl << *T << endl;
-//					);
-//					q->bifurcate();
-//					DEBUG(
-//							cout << "Tree AFTER:" << endl << *T << endl;
-//					);
-//					q->setEvent(duplication);
-//					q->setTime(t);
-//					q->onHostVertex() = false;
-//					h->getParasites().erase(q);
-//					DEBUG(cout << "Checking children of newly duplicated " << q->getLabel() << endl);
-//					for (Node * c = q->getFirstChild(); c != nullptr; c = c->getSibling()) {
-//						c->setHost(h);
-//						h->getParasites().insert(c);
-//						c->setTime(t);
-//						c->onHostVertex() = false;
-//						occupantsAtTime[t].insert(c);	// now the edges descendant from q are available for events at the next timestep
-//						DEBUG(cout << "New parasite node " << c->getLabel() << " on host " << h->getLabel() << " at time " << t << endl);
-//						DEBUG(cout << "\t which has parent " << q->getLabel() << endl);
-//					}
-//					DEBUG(cout << "First child of parasite node " << q->getLabel() << " is " << q->getFirstChild()->getLabel() << endl);
-//				} else if (ran < pB + pS) {	// HOST SWITCH
-//					DEBUG(cout << "HOST SWITCH event:" << endl);
-//					h = q->getHost();
-//					availableHosts.erase(h);
-//					if (availableHosts.size() == 0) {
-//						throw new app_exception("Cannot do a host switch, as there are no available host lineages!");
-//					}
-//					q->bifurcate();
-//					q->setEvent(duplication);
-//					q->setTime(t);
-//					q->onHostVertex() = false;
-//					h->getParasites().erase(q);
-//					Node *c = q->getFirstChild();
-//					c->setHost(h);
-//					h->getParasites().insert(c);
-//					c->setTime(t);
-//					c->onHostVertex() = false;
-//					occupantsAtTime[t].insert(c);
-//					c = c->getSibling();
-//					Node *nuhost = getRandomElement<Node*>(availableHosts);
-//					c->setHost(nuhost);
-//					nuhost->getParasites().insert(c);
-//					c->setTime(t);
-//					c->onHostVertex() = false;
-//					occupantsAtTime[t].insert(c);
-//				} else {	// DEATH
-//					DEBUG(cout << "EXTINCTION (LOSS) event:" << endl);
-//					q->setTime(t);
-//					q->onHostVertex() = false;
-//					q->setEvent(death);
-//					h->getParasites().erase(q);
-//				}
-//	//			DEBUG(cout << *this);
-//	//			DEBUG(q->getTree()->gatherVertices());
-//	//			DEBUG(q->getTree()->gatherLeaves());
-//				DEBUG(cout << "|occupantsAtTime| = " << occupantsAtTime.size() << endl);
-//			}
-//			if (t >= t_max) {
-//				break;
-//			}
-//		}
-//		// Get the time t_next of the next event for the parasites/genes
-//		// While t_next is prior the next host/species event, do whatever it is:
-//		//		duplication, extinction, host switch.
-//		// If t_next is later than the next host/species event,
-//		// 	handle the codivergence and lineage sorting, or extinctions, for that node.
-//		DEBUG(cout << *this);
-////		if (t >= t_final) {
-////			DEBUG(cout << "This is at or beyond the age of the host tree so coevolution is stopping." << endl);
-////			break;
-////		}
-//	}
-//}
+extern double birthRate;
+extern double deathRate;
+extern double hostSwitchRate;
+extern double jointDuplicationProb;
+extern bool _hostDictatesRate;
 
 void Cophylogeny::coevolve()
 {
 	// new try
 	bool _debugging(true);
-	bool _hostDictatesRate(true);
 	set<Node*> active;
 	double t_0(H->getAge());	// max possible time of anything in the Host tree
 	// Find first "active" Parasite nodes: those that can do anything
-	Tree* P = *(PTrees.begin());
+//	Tree* P = *(PTrees.begin());
 //	active.insert(P->getRoot());
 	double firstEventTime(t_0);
 	/*
@@ -549,13 +82,14 @@ void Cophylogeny::coevolve()
 	);
 	hNodeTimes[firstEventTime].insert(active.begin(), active.end());
 	double eventRate;
-	double hitchDuplicationProb(0.5);	// XXX magic number for parametrising later
 	set<Node*> availableHosts;
 	unsigned int numCodivergences(0);
-	unsigned int numDuplications(0);
+	unsigned int numIndividualDuplications(0);
 	unsigned int numExtinctions(0);
 	unsigned int numHostSwitches(0);
-	unsigned int numJointDuplicationEvents(0);
+	unsigned int numDuplicationEvents(0);
+	unsigned int numJointDuplications(0);
+	map<int, int> duplicationSizes;
 	unsigned int numLineageSortingEvents(0);
 	double t(firstEventTime);
 	approx roughlyEqual(0.000001);	// functor to return true iff input numbers are within this tolerance of each other.
@@ -571,10 +105,10 @@ void Cophylogeny::coevolve()
 			availableHosts.clear();
 			if (_hostDictatesRate) {
 				Node* p = *(active.begin());
-				eventRate += p->getBirthRate();
-				eventRate += p->getDeathRate();
+				eventRate += birthRate;
+				eventRate += deathRate;
 				if (p->getHost()->hasParent()) {
-					eventRate += p->getHostSwitchRate();
+					eventRate += hostSwitchRate;
 				}
 				for (Node* p : active) {
 					availableHosts.insert(p->getHost());	// all the extant hosts
@@ -678,14 +212,15 @@ void Cophylogeny::coevolve()
 						hNodeTimes[h->getTime()].insert(c);
 					}
 					hNodeTimes[h->getTime()].erase(p);
-					++numDuplications;
+					++numIndividualDuplications;
 					// Now do "hitch-hiking" type duplication events, currently selected at uniform random:
 					bool _jointEvent(false);
+					int segmentalDupSize(1);
 					for (Node* q : active) {
 						if (p == q || (q->getHost() != h)) {
 							continue;
 						}
-						if (dran() < hitchDuplicationProb) {
+						if (dran() < jointDuplicationProb) {
 							_jointEvent = true;
 							q->bifurcate();
 							q->setTime(t);
@@ -699,10 +234,13 @@ void Cophylogeny::coevolve()
 								hNodeTimes[h->getTime()].insert(c);
 							}
 							hNodeTimes[h->getTime()].erase(q);
-							++numDuplications;
+							++numIndividualDuplications;
+							++segmentalDupSize;
 						}
 					}
-					numJointDuplicationEvents += (_jointEvent) ? 1 : 0 ;
+					++numDuplicationEvents;
+					numJointDuplications += (_jointEvent) ? 1 : 0 ;
+					duplicationSizes[segmentalDupSize] = duplicationSizes[segmentalDupSize] + 1;
 				} else if (ran < pB + pS) {	// HOST SWITCH
 					h = p->getHost();
 					availableHosts.erase(h);
@@ -748,12 +286,38 @@ void Cophylogeny::coevolve()
 			}
 		}
 	}
-	cout << "numCodivergences = " << numCodivergences << endl;
-	cout << "numDuplication Events = " << numDuplications << endl;
-	cout << "numExtinctions = " << numExtinctions << endl;
-	cout << "numHostSwitches = " << numHostSwitches << endl;
-	cout << "numJointDuplicationEvents = " << numJointDuplicationEvents << endl;
-	cout << "numLineageSortingEvents = " << numLineageSortingEvents << endl;
+//	bool _verbose(false);
+	if (_verbose) {
+		cout << "numCodivergences = " << numCodivergences << endl;
+		cout << "numIndividualDuplications (per gene lineage) = " << numIndividualDuplications << endl;
+		cout << "numExtinctions = " << numExtinctions << endl;
+		cout << "numHostSwitches = " << numHostSwitches << endl;
+		cout << "numLineageSortingEvents = " << numLineageSortingEvents << endl;
+		cout << "numDuplicationEvents (1 or more lineages duplicate) = " << numDuplicationEvents << endl;
+		cout << "numJointDuplicationEvents (more than one lineage duplicates) = " << numJointDuplications << endl;
+		cout << "dupSize count" << endl;
+		for (auto pr : duplicationSizes) {
+			cout << std::setw(7) << pr.first << ' ' << pr.second << endl;
+		}
+	} else {
+		int maxJointDuplicationSize(1);
+		double meanDuplicationSize(0.0);
+		for (auto pr : duplicationSizes) {
+			meanDuplicationSize += pr.first * pr.second;
+			maxJointDuplicationSize = max(maxJointDuplicationSize, pr.first);
+		}
+		meanDuplicationSize /= numDuplicationEvents;
+		cout << "nCospec,nIndivididualDups,nAllDupEvents,nJointDups,maxDupSize,meanDupSize,nXtinc,nHostSwitch,nLineageSort" << endl;
+		cout << numCodivergences << ','
+				<< numIndividualDuplications << ','
+				<< numDuplicationEvents << ','
+				<< numJointDuplications << ','
+				<< maxJointDuplicationSize << ','
+				<< meanDuplicationSize << ','
+				<< numExtinctions << ','
+				<< numHostSwitches << ','
+				<< numLineageSortingEvents << endl;
+	}
 }
 
 Node* Cophylogeny::createParasiteRoot(Node* h, bool _onVertex) {
@@ -830,6 +394,9 @@ void Cophylogeny::outputForSegdup(ostream& os) {
 	H->writeNewick(os);
 	os << "\"";
 	for (auto P : PTrees) {
+		if (P->getRoot()->isLeaf()) {
+			continue;
+		}
 		os << " -G \"";
 		P->writeNewick(os);
 		os << "\" \"";

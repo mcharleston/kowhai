@@ -7,7 +7,10 @@
 
 #include <cstring>
 #include <fstream>
+#include <iomanip>
 #include <string>
+
+#include "../utility/debugging.h"
 
 #include "Tree.h"
 #include "Cophylogeny.h"
@@ -17,8 +20,33 @@ using namespace kowhai;
 
 bool _debugging(false);
 bool _for_segdup(false);
+bool _verbose(false);
+
 string hline("=================================================================\n");
-string kowhaiHelp("Kowhai Help");
+//string kowhaiHelp("Kowhai Help");
+
+const bool _defHostDictatesRate(true);
+const double defBirthRate(1.0);
+const double defDeathRate(0.0);
+const double defHostSwitchRate(0.0);
+const double defJointDuplicationProb(0.8);
+const double defProbCodivergence(1.0);
+const double defProbSampling(1.0);
+const int defNumHostLeaves(10);
+const int defNumParasiteTrees(1);
+const int defNumReplicates(1);
+
+namespace kowhai {
+bool _hostDictatesRate(_defHostDictatesRate);
+double birthRate(defBirthRate);
+double deathRate(defDeathRate);
+double hostSwitchRate(defHostSwitchRate);
+double codivProb(defProbCodivergence);
+double jointDuplicationProb(defJointDuplicationProb);
+int numHosts(defNumHostLeaves);
+int numParasiteTrees(defNumParasiteTrees);
+int numSamples(defNumReplicates);
+}
 
 void testTreeConstructionAndOutput() {
 	Tree T;
@@ -51,6 +79,8 @@ void testCoevolveBirthModel() {
 	q->getTree()->setCodivergenceProbability(0.8);
 	C.coevolve();
 	cout << C;
+//	delete p->getTree();
+//	delete q->getTree();
 }
 
 void testCoevolve() {
@@ -126,51 +156,91 @@ void testHostSwitching() {
 	cout << hline << "TESTING COMPLETE" << endl << hline;
 }
 
+string kowhaiHelp("Kowhai Help:\n"
+		"\t>./kowhai [options]\n"
+		"\t-h or --help\n\t\tto print this help message\n"
+		"\t--sim [options] ;\n"
+		"\t\tCurrently Kowhai only creates simple simulated cophylogenies, but later it will allow analysis!\n"
+		"\t\t-nH <int>\n\t\t\tto set the number of LEAVES/tips in a host/species tree, "
+		"generated under a Yule model (default value " + to_string(defNumHostLeaves) + ".\n"
+		"\t\t-nP <int>\n\t\t\tto set the number of parasite/gene TREES in each replicate (default value " + to_string(defNumParasiteTrees) + ");\n"
+		"\t\t-nR <int>\n\t\t\tto set the number of simulation replicates to do (default value 1);\n"
+		"\t\t-pC <float>\n\t\t\tto set the probability of codivergence at each host node (default value " + to_string(defProbCodivergence) + ");\n"
+		"\t\t-pJ <float>\n\t\t\tto set the probability of joint duplication (default value " + to_string(defJointDuplicationProb) + ");\n"
+		"\t\t-rB <float>\n\t\t\tto set the birth / duplication rate in the dependent phylogenies (default value " + to_string(defBirthRate) + ");\n"
+		"\t\t-rHS <float>\n\t\t\tto set the host switch rate in the dependent phylogenies (default value " + to_string(defHostSwitchRate) + ");\n"
+		"\t\t-rX <float>\n\t\t\tto set the death rate in the dependent phylogenies (default value " + to_string(defDeathRate) + ");\n"
+		"\t\t--for-segdup\n\t\t\tto provide output suitable for segdup input(default OFF)\n"
+		"\t\t\tNote that the output file \"for-segdup-from-kowhai.txt\" is always produced anyway.\n"
+		"\t\t--host-sets-rate\n\t\t\tto set the rates of the dependent phylogenies as determined by the HOST lineage (default: OFF)\n"
+	);
+
 int main(int argn, char** argc) {
-	if (argn < 2) {
-		testCoevolve();
-//		testCleverCoevolve();
-//		cout << kowhaiHelp << endl;
-		return 0;
-	}
 	bool _sim(false);
 	int i(1);
-	int numHosts(10);
-	int numParasiteTrees(2);
-	int numSamples(10);
-	double codivProb(0.75);
-	if (!strcmp(argc[i], "-sim")) {
+	if (argn < 2) {
+		cout << kowhaiHelp;
+	} else if (!strcmp(argc[i], "-h") || !strcmp(argc[i], "--help")) {
+		cout << kowhaiHelp;
+//	} else {
+//		testCoevolveBirthModel();
+	} else if (!strcmp(argc[i], "--sim") || (argn < 2)) {
 		_sim = true;
 		++i;
 		while (i < argn) {
 			if (!strcmp(argc[i], "-nH")) {
 				++i;
 				numHosts = atoi(argc[i]);
-				cout << "Setting number of host species to simulate as " << numHosts << endl;
+				DEBUG(cout << "Setting number of host SPECIES to simulate as " << numHosts << endl);
 			} else if (!strcmp(argc[i], "-nP")) {
 				++i;
 				numParasiteTrees = atoi(argc[i]);
-				cout << "Setting number of parasite trees to simulate as " << numParasiteTrees << endl;
-			} else if (!strcmp(argc[i], "-s")) {
+				DEBUG(cout << "Setting number of parasite TREES to simulate as " << numParasiteTrees << endl);
+			} else if (!strcmp(argc[i], "-nR")) {
 				++i;
 				numSamples = atoi(argc[i]);
-				cout << "Setting number of samples as " << numSamples << endl;
+				DEBUG(cout << "Setting number of samples as " << numSamples << endl);
 			} else if (!strcmp(argc[i], "-pC")) {
 				++i;
 				codivProb = atof(argc[i]);
-				cout << "Setting codivergence probability as " << codivProb << endl;
+				DEBUG(cout << "Setting codivergence probability as " << codivProb << endl);
+			} else if (!strcmp(argc[i], "-pJ")) {
+				++i;
+				jointDuplicationProb = atof(argc[i]);
+				DEBUG(cout << "Setting joint duplication probability switch rate as " << jointDuplicationProb << endl);
+			} else if (!strcmp(argc[i], "-rB")) {
+				++i;
+				birthRate = atof(argc[i]);
+				DEBUG(cout << "Setting birth/duplication rate as " << birthRate << endl);
+			} else if (!strcmp(argc[i], "-rHS")) {
+				++i;
+				hostSwitchRate = atof(argc[i]);
+				DEBUG(cout << "Setting host switch rate as " << hostSwitchRate << endl);
+			} else if (!strcmp(argc[i], "-rX")) {
+				++i;
+				deathRate = atof(argc[i]);
+				DEBUG(cout << "Setting death rate as " << deathRate << endl);
 			} else if (!strcmp(argc[i], "--for-segdup")) {
 				_for_segdup = true;
+				DEBUG(cout << "Output simulated cophylogeny for segdup" << endl);
+			} else if (!strcmp(argc[i], "--host-sets-rate")) {
+				_hostDictatesRate = true;
+				DEBUG(cout << "Duplication rate is set by the host tree, not dependent lineages." << endl);
+			} else if (!strcmp(argc[i], "--verbose")) {
+				_verbose = true;
+				DEBUG(cout << "Setting verbose output." << endl);
+			} else if (!strcmp(argc[i], ";")) {
+				break;
+			} else {
+				cout << "Sorry, cannot understand this argument: \"" << argc[i] << "\": please check your input?" << endl;
+				cout << kowhaiHelp;
+				return (0);
 			}
 			++i;
 		}
-	} else {
-		testCoevolveBirthModel();
-	}
+	} // add more main choices here, like analysis, later.
 	ofstream fseg;
-	if (_for_segdup) {
-		fseg.open("for-segdup-from-kowhai.txt", std::ofstream::out);
-	}
+	fseg.open("for-segdup-from-kowhai.txt", std::ofstream::out);
 	if (_sim) {
 		for (int s(0); s < numSamples; ++s) {
 			Node::resetNodeCounter();
@@ -182,15 +252,16 @@ int main(int argn, char** argc) {
 			C.setHostTree(&H);
 			for (int a(0); a < numParasiteTrees; ++a) {
 				Node* p = C.createParasiteRoot(H.getRoot(), true);
-				p->getTree()->setCodivergenceProbability(codivProb);
+				Tree* P = p->getTree();
+				P->setLabel("G" + to_string(a+1));
+				P->setCodivergenceProbability(codivProb);
 			}
 			C.coevolve();
+//			cout << C;	// XXX later, use a --verbose flag
 			if (_for_segdup) {
 				C.outputForSegdup(cout);
-			} else {
-				cout << C;
-				C.outputForSegdup(fseg);
 			}
+			C.outputForSegdup(fseg);
 		}
 
 	}
