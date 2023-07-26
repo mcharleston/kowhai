@@ -162,7 +162,7 @@ string kowhaiHelp("Kowhai Help:\n"
 		"\t--sim [options] ;\n"
 		"\t\tCurrently Kowhai only creates simple simulated cophylogenies, but later it will allow analysis!\n"
 		"\t\t-nH <int>\n\t\t\tto set the number of LEAVES/tips in a host/species tree, "
-		"generated under a Yule model (default value " + to_string(defNumHostLeaves) + ".\n"
+		"generated under a Yule model (default value " + to_string(defNumHostLeaves) + ").\n"
 		"\t\t-nP <int>\n\t\t\tto set the number of parasite/gene TREES in each replicate (default value " + to_string(defNumParasiteTrees) + ");\n"
 		"\t\t-nR <int>\n\t\t\tto set the number of simulation replicates to do (default value 1);\n"
 		"\t\t-pC <float>\n\t\t\tto set the probability of codivergence at each host node (default value " + to_string(defProbCodivergence) + ");\n"
@@ -170,7 +170,7 @@ string kowhaiHelp("Kowhai Help:\n"
 		"\t\t-rB <float>\n\t\t\tto set the birth / duplication rate in the dependent phylogenies (default value " + to_string(defBirthRate) + ");\n"
 		"\t\t-rHS <float>\n\t\t\tto set the host switch rate in the dependent phylogenies (default value " + to_string(defHostSwitchRate) + ");\n"
 		"\t\t-rX <float>\n\t\t\tto set the death rate in the dependent phylogenies (default value " + to_string(defDeathRate) + ");\n"
-		"\t\t--for-segdup\n\t\t\tto provide output suitable for segdup input(default OFF)\n"
+		"\t\t--for-segdup\n\t\t\tto provide output suitable for segdup input (default OFF)\n"
 		"\t\t\tNote that the output file \"for-segdup-from-kowhai.txt\" is always produced anyway.\n"
 		"\t\t--host-sets-rate\n\t\t\tto set the rates of the dependent phylogenies as determined by the HOST lineage (default: OFF)\n"
 	);
@@ -220,6 +220,9 @@ int main(int argn, char** argc) {
 				++i;
 				deathRate = atof(argc[i]);
 				DEBUG(cout << "Setting death rate as " << deathRate << endl);
+			} else if (!strcmp(argc[i], "-v")) {
+				++i;
+				_verbose = true;
 			} else if (!strcmp(argc[i], "--for-segdup")) {
 				_for_segdup = true;
 				DEBUG(cout << "Output simulated cophylogeny for segdup" << endl);
@@ -257,7 +260,7 @@ int main(int argn, char** argc) {
 				P->setCodivergenceProbability(codivProb);
 			}
 			C.coevolve();
-//			cout << C;	// XXX later, use a --verbose flag
+			cout << C;	// XXX later, use a --verbose flag
 			if (_for_segdup) {
 				C.outputForSegdup(cout);
 			}

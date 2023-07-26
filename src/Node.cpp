@@ -24,13 +24,14 @@ namespace kowhai {
 int Node::nodeCounter = 0;
 
 Node::Node() : _extant(false), parent(nullptr), firstChild(nullptr), sibling(nullptr), host(nullptr), _onHostVertex(false),
-		T(nullptr), CoP(nullptr), depth(-1), height(-1), timeIndex(-1), time(0.0), branchLength(0.0), _visited(false) {
+		event(noevent), T(nullptr), CoP(nullptr), depth(-1), height(-1), timeIndex(-1), time(0.0), branchLength(0.0), _visited(false) {
 	++nodeCounter;
 	string str = "v" + to_string(nodeCounter);
 	setLabel(str);
 }
 
-Node::Node(const Node& n) {
+Node::Node(const Node& n) : _extant(false), parent(nullptr), firstChild(nullptr), sibling(nullptr), host(nullptr), _onHostVertex(false),
+		event(noevent), T(nullptr), CoP(nullptr), depth(-1), height(-1), timeIndex(-1), time(0.0), branchLength(0.0), _visited(false) {
 	throw new app_exception("This copy constructor should not be called!");
 }
 
