@@ -487,4 +487,8 @@ void Tree::writeNewick(ostream& os) {
 	root->writeNewick(os);
 }
 
+void Tree::writeNewick(ostream& os, std::map<std::string, std::string> relabel) {
+	root->writeNewick(os, relabel);
+}
+
 } /* namespace kowhai */

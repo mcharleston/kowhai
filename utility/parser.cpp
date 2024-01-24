@@ -286,10 +286,10 @@ void Parser::ignore(int n_args, std::initializer_list<std::string> ss) {
 bool Parser::matches(const char c) {
 	return currentIs(c);
 }
-bool Parser::matches(const string& s) {
+bool Parser::matches(const std::string& s) {
 	return currentIs(s);
 }
-bool Parser::matches(const initializer_list<char>& cc) {
+bool Parser::matches(const std::initializer_list<char>& cc) {
 	for (char c : cc) {
 		if (currentIs(c)) {
 			return true;
@@ -297,7 +297,7 @@ bool Parser::matches(const initializer_list<char>& cc) {
 	}
 	return false;
 }
-bool Parser::matches(const initializer_list<string>& ss) {
+bool Parser::matches(const std::initializer_list<std::string>& ss) {
 	for (std::string s : ss) {
 		if (currentIs(s)) {
 			return true;
@@ -382,6 +382,19 @@ bool matchesIgnoreCase(char ch, std::initializer_list<char>& cc) {
 	return false;
 }
 bool matchesIgnoreCase(string str, initializer_list<string> patterns) {
+	// Convert initializer_list to vector and call the (string, vector) overload.
+	transform(str.begin(), str.end(), str.begin(), ::tolower);
+	vector<string> vec(patterns.begin(), patterns.end());
+//	return matchesIgnoreCase(str, vec);
+	for (string s : patterns) {
+		transform(s.begin(), s.end(), s.begin(), ::tolower);
+		if (str.compare(s) == 0) {
+			return true;
+		}
+	}
+	return false;
+}
+bool matchesIgnoreCase(string str, const vector<string>& patterns) {
 	// Convert initializer_list to vector and call the (string, vector) overload.
 	transform(str.begin(), str.end(), str.begin(), ::tolower);
 	vector<string> vec(patterns.begin(), patterns.end());

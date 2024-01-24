@@ -145,6 +145,7 @@ public:
 	void storeNodeTimes(std::map<double, std::set<Node*>>& M);
 
 	void writeNewick(std::ostream& os);
+	void writeNewick(std::ostream& os, std::map<std::string, std::string> relabel);
 };
 
 

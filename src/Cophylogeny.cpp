@@ -7,6 +7,7 @@
 
 #include <cmath>
 #include <map>
+#include <fstream>
 #include <iomanip>
 #include <stdio.h>
 #include <vector>
@@ -21,6 +22,7 @@ using namespace std;
 
 extern bool _debugging;
 extern bool _verbose;
+extern std::ofstream summaryfile;
 
 namespace kowhai {
 
@@ -299,6 +301,19 @@ void Cophylogeny::coevolve()
 		for (auto pr : duplicationSizes) {
 			cout << std::setw(7) << pr.first << ' ' << pr.second << endl;
 		}
+//		summaryfile << "nCospec,nIndivididualDups,nAllDupEvents,nJointDups,nXtinc,nHostSwitch,nLineageSort\n";
+		summaryfile << numCodivergences << ',';
+		summaryfile << numIndividualDuplications << ',';
+		summaryfile << numDuplicationEvents << ',';
+		summaryfile << numJointDuplications << ',';
+		summaryfile << numExtinctions << ',';
+		summaryfile << numHostSwitches << ',';
+		summaryfile << numLineageSortingEvents << ',';
+//		summaryfile << ',';
+//		for (auto pr : duplicationSizes) {
+//			summaryfile << std::setw(7) << pr.first << ' ' << pr.second << ',';
+//		}
+		summaryfile << endl;
 	} else {
 		int maxJointDuplicationSize(1);
 		double meanDuplicationSize(0.0);
@@ -307,7 +322,7 @@ void Cophylogeny::coevolve()
 			maxJointDuplicationSize = max(maxJointDuplicationSize, pr.first);
 		}
 		meanDuplicationSize /= numDuplicationEvents;
-		cout << "nCospec,nIndivididualDups,nAllDupEvents,nJointDups,maxDupSize,meanDupSize,nXtinc,nHostSwitch,nLineageSort" << endl;
+		cout << "nCospec,nIndividualDups,nAllDupEvents,nJointDups,maxDupSize,meanDupSize,nXtinc,nHostSwitch,nLineageSort" << endl;
 		cout << numCodivergences << ','
 				<< numIndividualDuplications << ','
 				<< numDuplicationEvents << ','
@@ -388,6 +403,27 @@ Node* Cophylogeny::createParasiteRoot(Node *h, double beforeBy) {
 //	h->getParasites().erase(p);
 //	h->getParasites().insert(q);	// XXX still debating whether I really need a map of the occupants; wouldn't a set of Node* do?
 //}
+
+void Cophylogeny::outputForMultRec(ostream& os) {
+	os << "-s \"";
+	H->writeNewick(os);
+	os << ";\"";
+	os << " -g \"";
+	for (auto P : PTrees) {
+		if (P->getRoot()->isLeaf()) {
+			continue;
+		}
+		map<string, string> relabel;
+		for (map<string, Node*>::iterator iter = P->getLeaves().begin(); iter != P->getLeaves().end(); ++iter) {
+			Node* p = iter->second;
+			relabel[p->getLabel()] = p->getHost()->getLabel() + "__" + p->getLabel();
+		}
+		P->writeNewick(os, relabel);
+		os << "; ";
+	}
+	os << "\"";
+	os << endl;
+}
 
 void Cophylogeny::outputForSegdup(ostream& os) {
 	os << "-S \"";

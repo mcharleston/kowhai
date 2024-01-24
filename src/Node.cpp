@@ -317,6 +317,32 @@ void Node::writeNewick(ostream& os) {
 	}
 }
 
+void Node::writeNewick(ostream& os, map<string, string> relabel) {
+	if (isLeaf()) {
+		os << relabel[label];
+		if (T->displayBranchLengths()) {
+			os << ':' << to_string(branchLength);
+		}
+	} else {
+		os << '(';
+		Node* c = firstChild;
+		c->writeNewick(os, relabel);
+		c = c->sibling;
+		while (c != nullptr) {
+			os << ',';
+			c->writeNewick(os, relabel);
+			c = c->sibling;
+		}
+		os << ')';
+		if (T->displayInternalLabels()) {
+			os << label;
+		}
+		if (T->displayBranchLengths()) {
+			os << ':' << to_string(branchLength);
+		}
+	}
+}
+
 std::ostream& operator<<(std::ostream& os, Node& n) {
 	if (n.isLeaf()) {
 		os << n.getLabel();

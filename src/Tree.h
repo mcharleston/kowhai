@@ -123,6 +123,7 @@ public:
 	void setShowInfo(bool b) { _showInfo = b; }
 
 	void writeNewick(std::ostream& os);
+	void writeNewick(std::ostream& os, std::map<std::string, std::string> relabel);
 
 };
 
