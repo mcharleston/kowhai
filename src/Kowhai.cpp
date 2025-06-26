@@ -11,16 +11,22 @@
 #include <string>
 
 #include "../utility/debugging.h"
+#include "../utility/parser.h"
 
 #include "Tree.h"
 #include "Cophylogeny.h"
 
 using namespace std;
 using namespace kowhai;
+using namespace parsing;
 
 bool _debugging(false);
+bool _for_multrec(false);
 bool _for_segdup(false);
 bool _verbose(false);
+
+ofstream summaryfile;
+
 
 string hline("=================================================================\n");
 //string kowhaiHelp("Kowhai Help");
@@ -170,9 +176,11 @@ string kowhaiHelp("Kowhai Help:\n"
 		"\t\t-rB <float>\n\t\t\tto set the birth / duplication rate in the dependent phylogenies (default value " + to_string(defBirthRate) + ");\n"
 		"\t\t-rHS <float>\n\t\t\tto set the host switch rate in the dependent phylogenies (default value " + to_string(defHostSwitchRate) + ");\n"
 		"\t\t-rX <float>\n\t\t\tto set the death rate in the dependent phylogenies (default value " + to_string(defDeathRate) + ");\n"
-		"\t\t--for-segdup\n\t\t\tto provide output suitable for segdup input (default OFF)\n"
+		"\t\t--for-multrec\n\t\t\tto provide output suitable for segdup input (default: OFF);\n"
+		"\t\t--for-segdup\n\t\t\tto provide output suitable for segdup input (default: OFF);\n"
 		"\t\t\tNote that the output file \"for-segdup-from-kowhai.txt\" is always produced anyway.\n"
 		"\t\t--host-sets-rate\n\t\t\tto set the rates of the dependent phylogenies as determined by the HOST lineage (default: OFF)\n"
+		"\t\t--verbose\n\t\t\tset verbosity to output miore stuff.\n"
 	);
 
 int main(int argn, char** argc) {
@@ -188,7 +196,7 @@ int main(int argn, char** argc) {
 		_sim = true;
 		++i;
 		while (i < argn) {
-			if (!strcmp(argc[i], "-nH")) {
+			if (!strcmp(argc[i], "-nH")) {	//matchesIgnoreCase(argc[i], {"-nH"})) {
 				++i;
 				numHosts = atoi(argc[i]);
 				DEBUG(cout << "Setting number of host SPECIES to simulate as " << numHosts << endl);
@@ -223,6 +231,9 @@ int main(int argn, char** argc) {
 			} else if (!strcmp(argc[i], "-v")) {
 				++i;
 				_verbose = true;
+			} else if (!strcmp(argc[i], "--for-multrec")) {
+				_for_multrec = true;
+				DEBUG(cout << "Output simulated cophylogeny for multrec" << endl);
 			} else if (!strcmp(argc[i], "--for-segdup")) {
 				_for_segdup = true;
 				DEBUG(cout << "Output simulated cophylogeny for segdup" << endl);
@@ -243,7 +254,15 @@ int main(int argn, char** argc) {
 		}
 	} // add more main choices here, like analysis, later.
 	ofstream fseg;
-	fseg.open("for-segdup-from-kowhai.txt", std::ofstream::out);
+	if (_for_segdup) {
+		fseg.open("for-segdup-from-kowhai.txt", std::ofstream::out);
+	}
+	ofstream fmultrec;
+	if (_for_multrec) {
+		fmultrec.open("for-multrec-from-kowhai.txt", std::ofstream::out);
+	}
+	summaryfile.open("summary.csv", std::ios_base::app);
+	summaryfile << "nCospec,nIndivididualDups,nAllDupEvents,nJointDups,maxDupSize,meanDupSize,nXtinc,nHostSwitch,nLineageSort\n";
 	if (_sim) {
 		for (int s(0); s < numSamples; ++s) {
 			Node::resetNodeCounter();
@@ -260,13 +279,22 @@ int main(int argn, char** argc) {
 				P->setCodivergenceProbability(codivProb);
 			}
 			C.coevolve();
-			cout << C;	// XXX later, use a --verbose flag
+			if (_verbose) {
+				cout << C;
+			}
 			if (_for_segdup) {
 				C.outputForSegdup(cout);
+				C.outputForSegdup(fseg);
 			}
-			C.outputForSegdup(fseg);
+			if (_for_multrec) {
+				C.outputForMultRec(fmultrec);
+				C.outputForMultRec(cout);
+			}
 		}
 
+	}
+	if (_for_multrec) {
+		fmultrec.close();
 	}
 	if (_for_segdup) {
 		fseg.close();

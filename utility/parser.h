@@ -127,11 +127,12 @@ void toLower(std::string& str);
 
 bool matches(char ch, std::initializer_list<char>& chars);
 bool matches(const std::string& str, const std::initializer_list<std::string>& patterns);
-//bool matches(const std::string& str, const std::vector<std::string>& patterns);
+bool matches(const std::string& str, const std::vector<std::string>& patterns);
+
 
 bool matchesIgnoreCase(char ch, std::initializer_list<char>& chars);
 bool matchesIgnoreCase(std::string str, std::initializer_list<std::string> patterns);
-//bool matchesIgnoreCase(std::string str, std::vector<std::string>& patterns);
+//bool matchesIgnoreCase(std::string str, const std::vector<std::string>& patterns);
 
 //std::ostream& operator<<(std::ostream& os, const std::set<std::string>& S);
 }

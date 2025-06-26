@@ -32,8 +32,9 @@ double dran(double mult) {
 }
 
 int iran(int max) {
-	return floor(max * 1.0 * fran());
+	return std::uniform_int_distribution(0, max-1)();
 }
+
 uint plran(float l, float u, float r) {
 	float y(fran());
 	float ex(r+1.0);

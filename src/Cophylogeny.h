@@ -40,6 +40,7 @@ public:
 	inline Tree* getHostTree() { return H; }
 	inline std::set<Tree*>& getParasiteTrees() { return PTrees; }
 
+	void outputForMultRec(std::ostream &os);
 	void outputForSegdup(std::ostream &os);
 
 	inline void setHostTree(Tree *T) { H = T; }
